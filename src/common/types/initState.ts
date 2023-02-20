@@ -1,0 +1,1 @@
+export type InitState = "initial" | "in process" | "done";

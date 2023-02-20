@@ -1,0 +1,23 @@
+.message {
+    margin: 20px;
+    border-radius: 15px;
+    border: 1px solid salmon;
+    background: bisque;
+    list-style: none;
+    text-align: left;
+    padding: 10px 20px;
+    max-width: 70vh;
+}
+
+.message-name {
+    font-weight: bolder;
+}
+
+.message-date {
+    font-family: monospace;
+    margin-left: 10px;
+}
+
+.message-text {
+    display: block;
+}
