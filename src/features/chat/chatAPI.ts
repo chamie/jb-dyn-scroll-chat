@@ -37,7 +37,7 @@ export const fetchMessages = async (chatId: string, skip: number)
 const fakeChatMessages: Message[] = [];
 
 const delayedResolve = <T>(value: T): Promise<T> =>
-    new Promise(resolve => setTimeout(() => resolve(value), Math.random() * 100));
+    new Promise(resolve => setTimeout(() => resolve(value), Math.random() * 1000));
 
 type Results<T> = {
     data: T[],
@@ -87,7 +87,7 @@ const generateMockMessage = (): Message => {
     return {
         name: subject[rnd(subject.length)],
         text: [subject, action, object, adverbial1, adverbialObject].map(getRandomElement).join(" "),
-        date: time.getHours() + ":" + time.getMinutes(),
+        date: (time.toISOString().match(/T([\d:]+)\./)!)[1],
         id: fakeChatMessages.length,
     };
 };
