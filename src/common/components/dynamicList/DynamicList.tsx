@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef } from "react";
 import { useIsInViewport } from "../../hooks/isInViewPort";
 import styles from './DynamicList.module.css';
 
@@ -24,30 +24,20 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
     const firstItemElementRef = useRef<HTMLDivElement>(null);
     /** Expected to be used before being set (i.e. using value from the previous render) */
     const lastItemElementRef = useRef<HTMLDivElement>(null);
+
+    const firstItemIdRef = useRef<string | number>(-1);
+    const lastItemIdRef = useRef<string | number>(-1);
+
+    /** An item that was in the list during previous render, we use it as a reference point of list position */
     const matchingNewItemElementRef = useRef<HTMLDivElement>(null);
-    const previousFirstItemIdRef = useRef<string | number>(-1);
-    const previousLastItemIdRef = useRef<string | number>(-1);
 
-    let matchingItemId: string | number = -1;
-    let matchingOldItemOffset = -1;
+    const matchingItemId = items.find(item => item.id === firstItemIdRef.current || item.id === lastItemIdRef.current)?.id;
 
-    items.some(item => {
-        if (item.id === previousLastItemIdRef.current) {
-            matchingItemId = item.id;
-            matchingOldItemOffset = lastItemElementRef.current?.offsetTop || 0;
-            return true;
-        }
-        if (item.id === previousFirstItemIdRef.current) {
-            matchingItemId = item.id;
-            matchingOldItemOffset = firstItemElementRef.current?.offsetTop || 0;
-            return true;
-        }
-        return false;
-    });
+    const matchingOldItemOffset = (matchingItemId === firstItemIdRef.current ? firstItemElementRef : lastItemElementRef).current?.offsetTop || 0;
 
     if (items.length) {
-        previousFirstItemIdRef.current = items[0].id;
-        previousLastItemIdRef.current = items.slice(-1)[0].id;
+        firstItemIdRef.current = items[0].id;
+        lastItemIdRef.current = items.slice(-1)[0].id;
     }
 
     const containerRef = useRef<HTMLDivElement>(null);
