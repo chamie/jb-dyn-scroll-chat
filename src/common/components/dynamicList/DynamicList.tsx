@@ -125,7 +125,7 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
         <div ref={containerRef} className={styles.container} onScroll={onScroll}>
             {
                 loadPreviousRecords &&
-                <div ref={loadPrevTriggerRef} className="bound">Loading more…</div>
+                <div ref={loadPrevTriggerRef} className={styles['edgeline-loader']}>Loading more…</div>
             }
 
             {items.map((item, idx) => {
@@ -151,7 +151,7 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
 
             {
                 loadNextRecords &&
-                <div ref={loadNextTriggerRef} className="bound">Loading more…</div>
+                <div ref={loadNextTriggerRef} className={styles['edgeline-loader']}>Loading more…</div>
             }
         </div>)
 };

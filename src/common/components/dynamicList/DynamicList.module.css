@@ -8,3 +8,8 @@
     margin: 0;
     padding: 0;
 }
+
+.edgeline-loader {
+    background-image: url("./btn-loading-back.svg");
+    background-size: cover;
+}
