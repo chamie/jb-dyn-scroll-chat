@@ -54,8 +54,6 @@ export const fake = {
         const isFirst = rangeStart === 0;
         const isLast = rangeEnd === fakeChatMessages.length;
 
-        //console.log(`Top ${top} messages requested from chat ${chatId}, starting from message ${skip}`);
-
         return delayedResolve({
             data: results,
             isFirst,

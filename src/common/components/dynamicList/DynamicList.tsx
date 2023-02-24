@@ -15,9 +15,6 @@ type PositioningMode = "keep in place" | "stick to bottom" | "do nothing";
 const DynamicListComponent = <T extends { id: string | number },>(props: Props<T>) => {
     const { items, ElementComponent, loadPreviousRecords, loadNextRecords, onHitBottom } = props;
 
-    console.log((window as any).items === items ? "Что за пиздец?" : "Okay");
-    (window as any).items = items;
-
     /** Refers to the top edge separator. When it comes into view, we load previous messages */
     const loadPrevTriggerRef = useRef<HTMLDivElement>(null);
     /** Refers to the bottom edge separator. When it comes into view, we load next messages */
@@ -65,8 +62,6 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
 
     const positioningModeRef = useRef<PositioningMode>("stick to bottom");
 
-    //console.log(matchingNewItemElementRef);
-
     useLayoutEffect(() => {
         //window.requestAnimationFrame(() => {
         if (positioningModeRef.current === "keep in place") {
@@ -100,7 +95,6 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
 
     const wasBottomEdgeVisible = useRef(true);
     useIsInViewport(loadNextTriggerRef, (isBottomEdgeVisible) => {
-        //console.log(`Lower`, { isVisible });
         if (isBottomEdgeVisible !== wasBottomEdgeVisible.current) {
             if (isBottomEdgeVisible && loadNextRecords) {
                 positioningModeRef.current = "keep in place";
