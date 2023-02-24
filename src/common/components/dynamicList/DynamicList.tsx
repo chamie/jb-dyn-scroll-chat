@@ -1,105 +1,159 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useIsInViewport } from "../../hooks/isInViewPort";
 import styles from './DynamicList.module.css';
 
 export type Props<T> = {
-    elements: T[],
+    items: T[],
     ElementComponent: React.ComponentType<T>,
-    onUpperBoundReached: () => void,
-    onLowerBoundReached: () => void,
-    onReachedBottom: (isBottom: boolean) => void,
-    isLastPage: boolean,
-    isFirstPage: boolean,
-    batchSize: number,
+    loadPreviousRecords?: () => void,
+    loadNextRecords?: () => void,
+    onHitBottom: (isBottom: boolean) => void,
 }
 
-export const DynamicList = <T,>(props: Props<T>) => {
-    const { elements, ElementComponent, onUpperBoundReached, onLowerBoundReached, isFirstPage, isLastPage, onReachedBottom, batchSize } = props;
+type PositioningMode = "keep in place" | "stick to bottom" | "do nothing";
 
-    /** Refers to the top edge separator, when it comes into view, we load previous messages */
-    const topEdgeRef = useRef<HTMLDivElement>(null);
-    /** Refers to the bottom edge separator, when it comes into view, we load next messages */
-    const bottomEdgeRef = useRef<HTMLDivElement>(null);
-    /** Refers to the element that previously was at top, so we could scroll to it to keep it on top of the scroll container */
-    const previousFirstElementRef = useRef<HTMLDivElement>(null);
-    /** Refers to the element that previously was at bottom, so we could scroll to it to keep it on at of the scroll container */
-    const previousLastElementRef = useRef<HTMLDivElement>(null);
-    const bottomAnchorRef = useRef<HTMLDivElement>(null);
+const DynamicListComponent = <T extends { id: string | number },>(props: Props<T>) => {
+    const { items, ElementComponent, loadPreviousRecords, loadNextRecords, onHitBottom } = props;
 
-    const [wasTopEdgeVisible, setWasTopEdgeVisible] = useState(false);
-    const [wasBottomEdgeVisible, setWasBottomEdgeVisible] = useState(false);
+    console.log((window as any).items === items ? "Что за пиздец?" : "Okay");
+    (window as any).items = items;
 
-    const [isAtBottom, setIsAtBottom] = useState(true);
+    /** Refers to the top edge separator. When it comes into view, we load previous messages */
+    const loadPrevTriggerRef = useRef<HTMLDivElement>(null);
+    /** Refers to the bottom edge separator. When it comes into view, we load next messages */
+    const loadNextTriggerRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (isAtBottom) {
-            bottomAnchorRef.current?.scrollIntoView();
+    /** Expected to be used before being set (i.e. using value from the previous render) */
+    const firstItemElementRef = useRef<HTMLDivElement>(null);
+    /** Expected to be used before being set (i.e. using value from the previous render) */
+    const lastItemElementRef = useRef<HTMLDivElement>(null);
+    const matchingNewItemElementRef = useRef<HTMLDivElement>(null);
+    const previousFirstItemIdRef = useRef<string | number>(-1);
+    const previousLastItemIdRef = useRef<string | number>(-1);
+
+    let matchingItemId: string | number = -1;
+    let matchingOldItemOffset = -1;
+
+    items.some(item => {
+        if (item.id === previousLastItemIdRef.current) {
+            matchingItemId = item.id;
+            matchingOldItemOffset = lastItemElementRef.current?.offsetTop || 0;
+            return true;
         }
+        if (item.id === previousFirstItemIdRef.current) {
+            matchingItemId = item.id;
+            matchingOldItemOffset = firstItemElementRef.current?.offsetTop || 0;
+            return true;
+        }
+        return false;
+    });
+
+    if (items.length) {
+        previousFirstItemIdRef.current = items[0].id;
+        previousLastItemIdRef.current = items.slice(-1)[0].id;
+    }
+
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    /** Distance from the top of the matching element
+     * to the top of the container's visible part */
+    let scrollOffset = 0;
+    if (containerRef.current) {
+        const containerScrollTop = containerRef.current.scrollTop || 0;
+        scrollOffset = matchingOldItemOffset - containerScrollTop;
+    }
+
+    const positioningModeRef = useRef<PositioningMode>("stick to bottom");
+
+    //console.log(matchingNewItemElementRef);
+
+    useLayoutEffect(() => {
+        //window.requestAnimationFrame(() => {
+        if (positioningModeRef.current === "keep in place") {
+            if (containerRef.current) {
+                const newItemOffset = matchingNewItemElementRef.current?.offsetTop || 0;
+                containerRef.current.scrollTop = newItemOffset - scrollOffset;
+            }
+            positioningModeRef.current = "do nothing";
+        }
+        //});
     });
 
     useEffect(() => {
-        if (!isAtBottom) {
-            if (wasTopEdgeVisible) {
-                previousFirstElementRef.current?.scrollIntoView();
-            }
-            if (wasBottomEdgeVisible) {
-                previousLastElementRef.current?.scrollIntoView(false);
-            }
-        }
-    }, [isAtBottom, wasBottomEdgeVisible, wasTopEdgeVisible]);
-
-    useIsInViewport(topEdgeRef, (isVisible) => {
-        //console.log(`Upper`, { isVisible });
-        if (isVisible && !wasTopEdgeVisible && !isFirstPage) {
-            onUpperBoundReached();
-        }
-        if (isVisible !== wasTopEdgeVisible) {
-            setWasTopEdgeVisible(isVisible);
+        if (containerRef.current && positioningModeRef.current === "stick to bottom") {
+            // Scroll to bottom
+            const listElement = containerRef.current;
+            listElement.scrollTop = listElement.scrollHeight;
         }
     });
 
-    useIsInViewport(bottomEdgeRef, (isVisible) => {
+    const wasTopEdgeVisible = useRef(true);
+    useIsInViewport(loadPrevTriggerRef, (isTopEdgeVisible) => {
+        if (isTopEdgeVisible !== wasTopEdgeVisible.current) {
+            if (isTopEdgeVisible && loadPreviousRecords) {
+                positioningModeRef.current = "keep in place";
+                loadPreviousRecords();
+            }
+            wasTopEdgeVisible.current = isTopEdgeVisible;
+        }
+    });
+
+    const wasBottomEdgeVisible = useRef(true);
+    useIsInViewport(loadNextTriggerRef, (isBottomEdgeVisible) => {
         //console.log(`Lower`, { isVisible });
-        if (isVisible && !wasBottomEdgeVisible && !isLastPage) {
-            onLowerBoundReached();
-        }
-        if (isVisible !== wasBottomEdgeVisible) {
-            setWasBottomEdgeVisible(isVisible);
+        if (isBottomEdgeVisible !== wasBottomEdgeVisible.current) {
+            if (isBottomEdgeVisible && loadNextRecords) {
+                positioningModeRef.current = "keep in place";
+                loadNextRecords();
+            }
+            wasBottomEdgeVisible.current = isBottomEdgeVisible;
         }
     });
 
     const onScroll = (event: React.UIEvent<HTMLDivElement, UIEvent>) => {
         const { scrollTop, clientHeight, scrollHeight } = event.currentTarget;
         const scrolledToBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 1;
-        const hasReachedTheVeryBottom = scrolledToBottom && isLastPage;
-        if (hasReachedTheVeryBottom !== isAtBottom) {
-            setIsAtBottom(hasReachedTheVeryBottom);
-            onReachedBottom(scrolledToBottom && isLastPage);
+        const hasReachedTheVeryBottom = scrolledToBottom && !loadNextRecords;
+        const wasAtBottom = positioningModeRef.current === "stick to bottom";
+        if (wasAtBottom !== hasReachedTheVeryBottom) {
+            positioningModeRef.current = hasReachedTheVeryBottom ? "stick to bottom" : "do nothing";
+            onHitBottom(hasReachedTheVeryBottom);
         }
     }
 
     return (
-        <div className={styles.container} onScroll={onScroll}>
+        <div ref={containerRef} className={styles.container} onScroll={onScroll}>
             {
-                !isFirstPage &&
-                <div ref={topEdgeRef} className="bound">Loading more…</div>
+                loadPreviousRecords &&
+                <div ref={loadPrevTriggerRef} className="bound">Loading more…</div>
             }
 
-            {elements.map((element, idx) => {
-                const ref = idx === batchSize
-                    ? previousFirstElementRef
-                    : idx === elements.length - batchSize
-                        ? previousLastElementRef
-                        : null;
-                return <div ref={ref} key={idx}> <ElementComponent {...element} key={idx} /></div>;
+            {items.map((item, idx) => {
+                let ref: React.RefObject<HTMLDivElement> | undefined = undefined;
+                if (item.id === matchingItemId) {
+                    ref = matchingNewItemElementRef;
+                }
+                if (idx === 0) {
+                    ref = firstItemElementRef;
+                }
+                if (idx === items.length - 1) {
+                    ref = lastItemElementRef;
+                }
+                // const ref = item.id === matchingItemId
+                //     ? matchingNewItemElementRef
+                //     : idx === 0
+                //         ? previousFirstItemElementRef
+                //         : idx === items.length - 1
+                //             ? previousLastItemElementRef
+                //             : undefined;
+                return <div ref={ref} key={item.id}> <ElementComponent {...item} key={item.id} /></div>;
             })}
 
             {
-                !isLastPage &&
-                <div ref={bottomEdgeRef} className="bound">Loading more…</div>
+                loadNextRecords &&
+                <div ref={loadNextTriggerRef} className="bound">Loading more…</div>
             }
-            <div style={{ float: "left", clear: "both" }}
-                ref={bottomAnchorRef}>
-            </div>
         </div>)
-}
+};
+
+export const DynamicList = React.memo(DynamicListComponent) as typeof DynamicListComponent;

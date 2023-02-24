@@ -9,10 +9,17 @@ export const loadMessages = (chatId: string, offsetId?: number): AsyncAppThunk =
         }
         dispatch(chatsSlice.actions.setLoadState({ chatId, state: "loading" }));
         try {
-            const messages = await fake.getMessages(chatId, pageSize, offsetId);
+            const { data: messages, isFirst, isLast } = await fake.getMessages(chatId, pageSize, offsetId);
 
-            dispatch(chatsSlice.actions.updateChat({ chatId, chatData: { messages } }));
-            dispatch(chatsSlice.actions.setLoadState({ chatId, state: "idle" }));
+            dispatch(chatsSlice.actions.updateChat({
+                chatId,
+                chatData: {
+                    messages,
+                    isLastPage: isLast,
+                    isFirstPage: isFirst,
+                    loadState: "idle"
+                }
+            }));
         } catch {
             dispatch(chatsSlice.actions.setLoadState({ chatId, state: "failed" }));
         }
@@ -33,14 +40,20 @@ export const init = (chatId: string): AsyncAppThunk =>
 
 export const fetchPreviousMessages = (chatId: string): AsyncAppThunk =>
     async (dispatch, getState) => {
-        console.log(`Fetching prev messages`);
-        const upperBoundMessageId = selectChatMessages(chatId)(getState())[0].id + batchSize;
-        dispatch(loadMessages(chatId, upperBoundMessageId));
+        const messages = selectChatMessages(chatId)(getState());
+        const offsetMessageId =
+            messages.length >= pageSize - batchSize
+                ? messages[pageSize - batchSize].id
+                : messages.slice(-1)[0].id;
+        dispatch(loadMessages(chatId, offsetMessageId));
     };
 
 export const fetchNextMessages = (chatId: string): AsyncAppThunk =>
     async (dispatch, getState) => {
-        console.log(`Fetching next messages`);
-        const lowerBoundMessageId = selectChatMessages(chatId)(getState()).slice(-1)[0].id - batchSize;
-        dispatch(loadMessages(chatId, lowerBoundMessageId + pageSize));
+        try {
+            const lowerBoundMessageId = selectChatMessages(chatId)(getState()).slice(-1)[0].id - batchSize;
+            dispatch(loadMessages(chatId, lowerBoundMessageId + pageSize));
+        } catch {
+            debugger;
+        }
     };

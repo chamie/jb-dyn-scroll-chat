@@ -5,6 +5,7 @@ export const store = configureStore({
   reducer: {
     chat: chatsReducer,
   },
+  devTools: true,
 });
 
 export type AppDispatch = typeof store.dispatch;

@@ -5,17 +5,19 @@ import { LoadState } from '../../common/types/loadState';
 import { Message } from './models/message';
 
 export const pageSize = 20;
-export const batchSize = 10;
+export const batchSize = 5;
 
-type Chat = {
+type ChatModel = {
     title: string,
     messages: Message[],
     loadState: LoadState,
     initState: InitState,
+    isLastPage: boolean,
+    isFirstPage: boolean,
 }
 
 export type ChatState = {
-    chatRooms: Record<string, Chat>,
+    chatRooms: Record<string, ChatModel>,
 }
 
 const initialState: ChatState = {
@@ -25,6 +27,8 @@ const initialState: ChatState = {
             title: "Flood Zone",
             loadState: "idle",
             initState: "initial",
+            isLastPage: true,
+            isFirstPage: true,
         }
     },
 };
@@ -33,7 +37,7 @@ export const chatsSlice = createSlice({
     name: "chats",
     initialState,
     reducers: {
-        updateChat: (state, action: PayloadAction<{ chatId: string, chatData: Partial<Chat> }>) => {
+        updateChat: (state, action: PayloadAction<{ chatId: string, chatData: Partial<ChatModel> }>) => {
             const { chatId, chatData } = action.payload;
             const chat = state.chatRooms[chatId];
             state.chatRooms[chatId] = { ...chat, ...chatData };
@@ -53,8 +57,10 @@ export default chatsSlice.reducer;
 
 export const selectChatMessages = (chatId: string) => (state: RootState) => state.chat.chatRooms[chatId].messages;
 
-export const selectChatData = (chatId: string) => (state: RootState) => state.chat.chatRooms[chatId];
-
 export const selectLoadState = (chatId: string) => (state: RootState) => state.chat.chatRooms[chatId].loadState;
 
 export const selectInitState = (chatId: string) => (state: RootState) => state.chat.chatRooms[chatId].initState;
+
+export const selectIsLastPage = (chatId: string) => (state: RootState) => state.chat.chatRooms[chatId].isLastPage;
+
+export const selectIsFirstPage = (chatId: string) => (state: RootState) => state.chat.chatRooms[chatId].isFirstPage;

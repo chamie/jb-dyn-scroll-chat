@@ -2,3 +2,9 @@
     max-height: 90vh;
     overflow: auto;
 }
+
+.elements {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
