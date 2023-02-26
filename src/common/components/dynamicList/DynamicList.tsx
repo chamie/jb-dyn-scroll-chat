@@ -66,7 +66,6 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
 
     useEffect(() => {
         if (containerRef.current && positioningModeRef.current === "stick to bottom") {
-            // Scroll to bottom
             const listElement = containerRef.current;
             listElement.scrollTop = listElement.scrollHeight;
         }
@@ -123,13 +122,7 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
                 if (idx === items.length - 1) {
                     ref = lastItemElementRef;
                 }
-                // const ref = item.id === matchingItemId
-                //     ? matchingNewItemElementRef
-                //     : idx === 0
-                //         ? previousFirstItemElementRef
-                //         : idx === items.length - 1
-                //             ? previousLastItemElementRef
-                //             : undefined;
+                
                 return <div ref={ref} key={item.id}> <ElementComponent {...item} key={item.id} /></div>;
             })}
 
