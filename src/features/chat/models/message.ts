@@ -4,3 +4,10 @@ export type Message = {
     text: string,
     date: string,
 }
+
+export type MessageCreateDto = {
+    name: string,
+    text: string,
+    chatId: string,
+    date: string,
+}

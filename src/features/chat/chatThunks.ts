@@ -1,5 +1,5 @@
 import { AsyncAppThunk } from "../../app/store";
-import { fake } from "./chatAPI";
+import { api } from "./chatAPI";
 import { batchSize, chatsSlice, pageSize, selectChatMessages, selectInitState, selectLoadState } from "./chatsSlice";
 
 export const loadMessages = (chatId: string, offsetId?: number): AsyncAppThunk =>
@@ -9,7 +9,7 @@ export const loadMessages = (chatId: string, offsetId?: number): AsyncAppThunk =
         }
         dispatch(chatsSlice.actions.setLoadState({ chatId, state: "loading" }));
         try {
-            const { data: messages, isFirst, isLast } = await fake.getMessages(chatId, pageSize, offsetId);
+            const { data: messages, isFirst, isLast } = await api.getMessages(chatId, pageSize, offsetId);
 
             dispatch(chatsSlice.actions.updateChat({
                 chatId,
