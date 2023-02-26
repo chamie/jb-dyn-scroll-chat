@@ -108,7 +108,7 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
         <div ref={containerRef} className={styles.container} onScroll={onScroll}>
             {
                 loadPreviousRecords &&
-                <div ref={loadPrevTriggerRef} className={styles['edgeline-loader']}>Loading more…</div>
+                <div data-testid="upper-loader" ref={loadPrevTriggerRef} className={styles['edgeline-loader']}>Loading more…</div>
             }
 
             {items.map((item, idx) => {
@@ -123,12 +123,12 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
                     ref = lastItemElementRef;
                 }
                 
-                return <div ref={ref} key={item.id}> <ElementComponent {...item} key={item.id} /></div>;
+                return <div data-testid="item" ref={ref} key={item.id}> <ElementComponent {...item} key={item.id} /></div>;
             })}
 
             {
                 loadNextRecords &&
-                <div ref={loadNextTriggerRef} className={styles['edgeline-loader']}>Loading more…</div>
+                <div data-testid="lower-loader" ref={loadNextTriggerRef} className={styles['edgeline-loader']}>Loading more…</div>
             }
         </div>)
 };

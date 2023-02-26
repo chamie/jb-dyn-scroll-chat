@@ -7,7 +7,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <Routes>
-          <Route path="/" element={<Link to="/chats/floodZone">Go to the chat</Link>} />
+          <Route path="/" element={<Link to="/chats/floodZone">Get to the chat</Link>} />
           <Route path="/chats/:chatId" element={<Chat />}/>
         </Routes>
       </header>
