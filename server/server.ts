@@ -1,5 +1,6 @@
 import * as JsonServer from 'json-server';
 import { Results } from '../src/common/types/results';
+import * as open from 'open';
 
 type Message = {
     name: string,
@@ -48,4 +49,9 @@ server.listen(3001, () => {
     } else {
         res.jsonp(res.locals.data);
     }
+}
+const shouldLaunchBrowser = process.argv[2] === "launch-browser";
+
+if (shouldLaunchBrowser) {
+    open("http://localhost:3001");
 }

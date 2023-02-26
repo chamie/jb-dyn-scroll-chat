@@ -8,26 +8,33 @@ In the project directory, you can run:
 
 ### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Builds the Front-End and Back-End and starts a `json-server`-based backend server that hosts everything.
+Open [http://localhost:3001](http://localhost:3001) to view it in the browser. Opens automatically.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+You will also see any lint and server runtime logs and errors in the console.
+
+### `start-be`
+
+Builds the Back-End and starts the server.
+If the Front-End is already built, that's enough to see at [http://localhost:3001](http://localhost:3001).
+
+### `build-fe`
+
+Builfd the Front-End React app in production mode.
+The output folder `build` is configured to be served as static files by `json-server`.
+
+### `build-be`
+
+Builds the Back-End but doesn't run it. Handy for error-checking.
+
+### `build-all`
+
+Builds both Front-End and Back-End together without starting the server.
 
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
 ### `npm run eject`
 
