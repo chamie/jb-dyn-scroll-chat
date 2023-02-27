@@ -193,7 +193,7 @@ describe('Dynamic list component', () => {
         expect(scrillTopReRender).toBe(500);
     });
 
-    it('should stop keeping the list scrolled to bottom on user scroll', () => {
+    it('should stop keeping the list scrolled to bottom after user scroll', () => {
         // Arrange
         jest.spyOn(Element.prototype, 'scrollHeight', 'get')
             .mockImplementation(() => 500);
@@ -210,7 +210,7 @@ describe('Dynamic list component', () => {
         );
 
         let containerElement = screen.getByTestId("list-container");
-        const scrillTopInitialRender = containerElement.scrollTop;
+        const scrollTopInitialRender = containerElement.scrollTop;
 
         containerElement.scrollTop = 100;
 
@@ -224,11 +224,11 @@ describe('Dynamic list component', () => {
             />
         );
         containerElement = screen.getByTestId("list-container");
-        const scrillTopReRender = containerElement.scrollTop;
+        const scrollTopReRender = containerElement.scrollTop;
 
         // Assert
-        expect(scrillTopInitialRender).toBe(500);
-        expect(scrillTopReRender).toBe(100);
-    });
+        expect(scrollTopInitialRender).toBe(500);
+        expect(scrollTopReRender).toBe(100);
+    });    
 
 })
