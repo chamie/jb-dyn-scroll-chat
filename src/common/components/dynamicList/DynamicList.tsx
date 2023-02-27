@@ -105,7 +105,7 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
     }
 
     return (
-        <div ref={containerRef} className={styles.container} onScroll={onScroll}>
+        <div ref={containerRef} className={styles.container} onScroll={onScroll} data-testid="list-container">
             {
                 loadPreviousRecords &&
                 <div data-testid="upper-loader" ref={loadPrevTriggerRef} className={styles['edgeline-loader']}>Loading more…</div>
@@ -122,7 +122,7 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
                 if (idx === items.length - 1) {
                     ref = lastItemElementRef;
                 }
-                
+
                 return <div data-testid="item" ref={ref} key={item.id}> <ElementComponent {...item} key={item.id} /></div>;
             })}
 
