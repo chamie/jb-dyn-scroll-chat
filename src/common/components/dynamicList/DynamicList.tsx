@@ -64,7 +64,7 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
         //});
     });
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (containerRef.current && positioningModeRef.current === "stick to bottom") {
             const listElement = containerRef.current;
             listElement.scrollTop = listElement.scrollHeight;
