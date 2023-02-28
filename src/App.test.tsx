@@ -1,12 +1,11 @@
-import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { store } from './app/store';
 import App from './App';
 import { HashRouter as Router } from 'react-router-dom';
 
 test('renders learn react link', () => {
-  const { getByText } = render(
+  render(
     <Router>
       <Provider store={store}>
         <App />
@@ -14,5 +13,5 @@ test('renders learn react link', () => {
     </Router>
   );
 
-  expect(getByText(/Select a chat from above/i)).toBeInTheDocument();
+  expect(screen.getByText(/Select a chat from above/i)).toBeInTheDocument();
 });
