@@ -10,7 +10,7 @@ export type Props<T> = {
     onHitBottom: (isBottom: boolean) => void,
 }
 
-type PositioningMode = "keep in place" | "stick to bottom" | "do nothing";
+type PositioningMode = "keep in place" | "stick to bottom";
 
 const DynamicListComponent = <T extends { id: string | number },>(props: Props<T>) => {
     const { items, ElementComponent, loadPreviousRecords, loadNextRecords, onHitBottom } = props;
@@ -59,7 +59,6 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
                 const newItemOffset = matchingNewItemElementRef.current?.offsetTop || 0;
                 containerRef.current.scrollTop = newItemOffset - scrollOffset;
             }
-            positioningModeRef.current = "do nothing";
         }
         //});
     });
@@ -99,7 +98,7 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
         const hasReachedTheVeryBottom = scrolledToBottom && !loadNextRecords;
         const wasAtBottom = positioningModeRef.current === "stick to bottom";
         if (wasAtBottom !== hasReachedTheVeryBottom) {
-            positioningModeRef.current = hasReachedTheVeryBottom ? "stick to bottom" : "do nothing";
+            positioningModeRef.current = hasReachedTheVeryBottom ? "stick to bottom" : "keep in place";
             onHitBottom(hasReachedTheVeryBottom);
         }
     }
