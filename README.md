@@ -8,10 +8,16 @@ In the project directory, you can run:
 
 ### `npm start`
 
-Builds the Front-End and Back-End and starts a `json-server`-based backend server that hosts everything.
-Open [http://localhost:3001](http://localhost:3001) to view it in the browser. Opens automatically.
+Builds the Front-End and Back-End and starts a `json-server`-based backend server that hosts everything,
+i.e. static files of the compiled React app and the DB API.
+Opens [http://localhost:3001](http://localhost:3001) to view it in the browser.
 
 You will also see any lint and server runtime logs and errors in the console.
+
+### `start-fe`
+
+Builds the Front-End in `development` mode and starts a dev webpack server with it on port 3000.
+This version uses FakeAPI that doesn't make actual web requests but stores the data in-memory.
 
 ### `start-be`
 
