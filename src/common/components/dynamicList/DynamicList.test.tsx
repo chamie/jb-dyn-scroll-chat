@@ -1,4 +1,4 @@
-import { fireEvent, getByTestId, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { DynamicList } from "./DynamicList";
 import * as uivp from "../../hooks/isInViewPort";
 
@@ -229,6 +229,6 @@ describe('Dynamic list component', () => {
         // Assert
         expect(scrollTopInitialRender).toBe(500);
         expect(scrollTopReRender).toBe(100);
-    });    
+    });
 
 })
