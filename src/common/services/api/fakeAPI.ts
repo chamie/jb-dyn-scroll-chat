@@ -10,7 +10,7 @@ const delayedResolve = <T>(value: T): Promise<T> =>
     new Promise(resolve => setTimeout(() => resolve(value), rnd(1000)));
 
 export const getMessages = (chatId: string, limit = 20, offsetId?: number): Promise<Results<Message>> => {
-    const messages = fakeChatMessages[chatId];
+    const messages = fakeChatMessages[chatId] || [];
     const rangeEnd = Math.min(offsetId || Infinity, messages.length);
     const rangeStart = Math.max(rangeEnd - limit, 0);
 
@@ -26,11 +26,13 @@ export const getMessages = (chatId: string, limit = 20, offsetId?: number): Prom
 }
 
 export const addMessage = (chatId: string, text: string, name: string) => {
+    const messages: Message[] = fakeChatMessages[chatId] || [];
     const message: Message = {
         name,
         text,
         date: (new Date().toISOString().match(/T([\d:]+)\./)!)[1],
-        id: fakeChatMessages[chatId].length
+        id: messages.length,
     };
-    fakeChatMessages[chatId].push(message);
+    messages.push(message);
+    fakeChatMessages[chatId] = messages;
 }

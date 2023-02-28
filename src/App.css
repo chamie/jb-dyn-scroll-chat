@@ -24,6 +24,8 @@
 
 .App-link {
   color: rgb(112, 76, 182);
+.top-menu {
+    display: flex;
 }
 
 @keyframes App-logo-float {
@@ -36,4 +38,9 @@
   100% {
     transform: translateY(0px);
   }
+}
+.top-menu a {
+    margin: 5px;
+    color: brown;
+    text-shadow: 1px 2px 3px darkgoldenrod;
 }

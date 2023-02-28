@@ -29,6 +29,14 @@ const initialState: ChatState = {
             initState: "initial",
             isLastPage: true,
             isFirstPage: true,
+        },
+        anotherOne: {
+            messages: [],
+            title: "Another One",
+            loadState: "idle",
+            initState: "initial",
+            isLastPage: true,
+            isFirstPage: true,
         }
     },
 };
@@ -56,6 +64,8 @@ export const { setInitState } = chatsSlice.actions;
 export default chatsSlice.reducer;
 
 export const selectChatMessages = (chatId: string) => (state: RootState) => state.chat.chatRooms[chatId].messages;
+
+export const selectChatTitle = (chatId: string) => (state: RootState) => state.chat.chatRooms[chatId].title;
 
 export const selectLoadState = (chatId: string) => (state: RootState) => state.chat.chatRooms[chatId].loadState;
 

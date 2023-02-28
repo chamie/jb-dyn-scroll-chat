@@ -6,11 +6,20 @@ const useFake = false;
 
 export const api = useFake ? FakeAPI : JsonServerAPI;
 
-const addMessage = () => {
+const addMessageToFloodZone = () => {
     setTimeout(() => {
         api.addMessage("floodZone", getRandomText(), getRandomName());
-        addMessage();
+        addMessageToFloodZone();
     }, rnd(2000));
 };
 
-addMessage();
+addMessageToFloodZone();
+
+const addMessageToAnotherOne = () => {
+    setTimeout(() => {
+        api.addMessage("anotherOne", getRandomText(), getRandomName());
+        addMessageToAnotherOne();
+    }, rnd(5000));
+};
+
+addMessageToAnotherOne();

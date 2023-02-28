@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
-import { selectChatMessages, selectIsFirstPage, selectIsLastPage } from "./chatsSlice"
+import { selectChatMessages, selectChatTitle, selectIsFirstPage, selectIsLastPage } from "./chatsSlice"
 import { fetchPreviousMessages, fetchNextMessages, init, loadMessages } from "./chatThunks";
 import styles from "./Chat.module.css";
 import { Message } from "./models/message";
@@ -53,7 +53,10 @@ export const Chat = () => {
         ? undefined
         : () => dispatch(fetchPreviousMessages(chatId));
 
+    const title = useAppSelector(selectChatTitle(chatId));
+
     return <div>
+        <h4>{title}</h4>
         <DynamicList
             items={messages}
             ElementComponent={MessageComponent}
@@ -62,6 +65,7 @@ export const Chat = () => {
             onHitBottom={isBottom => {
                 isAtBottomRef.current = isBottom;
             }}
+            listId={chatId}
         />
     </div>;
 }

@@ -6,8 +6,12 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
+        <div className="top-menu">
+          <Link to="/chats/floodZone">FloodZone chat</Link>
+          <Link to="/chats/anotherOne">…and another one</Link>
+        </div>
         <Routes>
-          <Route path="/" element={<Link to="/chats/floodZone">Get to the chat</Link>} />
+          <Route path="/" element={<>Select a chat from above ↑</>} />
           <Route path="/chats/:chatId" element={<Chat />}/>
         </Routes>
       </header>

@@ -8,12 +8,13 @@ export type Props<T> = {
     loadPreviousRecords?: () => void,
     loadNextRecords?: () => void,
     onHitBottom: (isBottom: boolean) => void,
+    listId?: string | number,
 }
 
 type PositioningMode = "keep in place" | "stick to bottom";
 
 const DynamicListComponent = <T extends { id: string | number },>(props: Props<T>) => {
-    const { items, ElementComponent, loadPreviousRecords, loadNextRecords, onHitBottom } = props;
+    const { items, ElementComponent, loadPreviousRecords, loadNextRecords, onHitBottom, listId = -1 } = props;
 
     /** Refers to the top edge separator. When it comes into view, we load previous messages */
     const loadPrevTriggerRef = useRef<HTMLDivElement>(null);
@@ -51,6 +52,15 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
     }
 
     const positioningModeRef = useRef<PositioningMode>("stick to bottom");
+
+    const prevListId = useRef(listId);
+
+    if (prevListId.current !== listId) {
+        positioningModeRef.current = "stick to bottom";
+        onHitBottom(true);
+    }
+
+    prevListId.current = listId;
 
     useLayoutEffect(() => {
         //window.requestAnimationFrame(() => {
