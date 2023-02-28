@@ -22,6 +22,7 @@
     },
     "scripts": {
         "start": "npm run build-all && node server/server.js launch-browser",
+        "start-fe (fake API)": "react-scripts start",
         "start-be": "tsc server/server.ts && node server/server.js",
         "build-fe": "react-scripts build",
         "build-be": "tsc server/server.ts",
