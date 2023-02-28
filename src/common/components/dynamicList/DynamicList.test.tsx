@@ -261,11 +261,16 @@ describe('Dynamic list component', () => {
                     return itemId * 7 * countReads; // 7 is a prime number not a factor of any other used numbers
                 }
 
-                return 123;  // 123 doesn't have common factors with either 7 (see above), 90 (list size) or 11 (matching item number)
+                return 123;
             });
 
         const listHead = itemsLongList.slice(0, -10);
         const listFoot = itemsLongList.slice(10);
+
+        // Magic numbers:
+        // 123 (default offset value), 7 (item offset multiplicator), 90 (list size) and 11 (matching item index).
+        // Rationale: they are all coprime integers,
+        // so the expected end result is not achievable by chance.
 
         // Act
         const view = render(
@@ -288,7 +293,7 @@ describe('Dynamic list component', () => {
                 onHitBottom={nop}
             />
         );
-        
+
         const scrollTopReRender = scrollTopValue;
 
         // Assert
