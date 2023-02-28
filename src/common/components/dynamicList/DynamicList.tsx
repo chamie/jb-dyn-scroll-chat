@@ -62,29 +62,27 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
 
     prevListId.current = listId;
 
-    useLayoutEffect(() => {
-        //window.requestAnimationFrame(() => {
-        if (positioningModeRef.current === "keep in place") {
-            if (containerRef.current) {
-                const newItemOffset = matchingNewItemElementRef.current?.offsetTop || 0;
-                containerRef.current.scrollTop = newItemOffset - scrollOffset;
+    useLayoutEffect(
+        /** Apply scroll position */
+        () => {
+            //window.requestAnimationFrame(() => {
+            const containerElement = containerRef.current;
+            if (containerElement) {
+                if (positioningModeRef.current === "keep in place") {
+                    const newItemOffset = matchingNewItemElementRef.current?.offsetTop || 0;
+                    containerElement.scrollTop = newItemOffset - scrollOffset;
+                }
+                if (positioningModeRef.current === "stick to bottom") {
+                    containerElement.scrollTop = containerElement.scrollHeight;
+                }
             }
-        }
-        //});
-    });
-
-    useLayoutEffect(() => {
-        if (containerRef.current && positioningModeRef.current === "stick to bottom") {
-            const listElement = containerRef.current;
-            listElement.scrollTop = listElement.scrollHeight;
-        }
-    });
+            //});
+        });
 
     const wasTopEdgeVisible = useRef(true);
     useIsInViewport(loadPrevTriggerRef, (isTopEdgeVisible) => {
         if (isTopEdgeVisible !== wasTopEdgeVisible.current) {
             if (isTopEdgeVisible && loadPreviousRecords) {
-                positioningModeRef.current = "keep in place";
                 loadPreviousRecords();
             }
             wasTopEdgeVisible.current = isTopEdgeVisible;
@@ -95,7 +93,6 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
     useIsInViewport(loadNextTriggerRef, (isBottomEdgeVisible) => {
         if (isBottomEdgeVisible !== wasBottomEdgeVisible.current) {
             if (isBottomEdgeVisible && loadNextRecords) {
-                positioningModeRef.current = "keep in place";
                 loadNextRecords();
             }
             wasBottomEdgeVisible.current = isBottomEdgeVisible;
@@ -107,8 +104,8 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
         const scrolledToBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 1;
         const hasReachedTheVeryBottom = scrolledToBottom && !loadNextRecords;
         const wasAtBottom = positioningModeRef.current === "stick to bottom";
+        positioningModeRef.current = hasReachedTheVeryBottom ? "stick to bottom" : "keep in place";
         if (wasAtBottom !== hasReachedTheVeryBottom) {
-            positioningModeRef.current = hasReachedTheVeryBottom ? "stick to bottom" : "keep in place";
             onHitBottom(hasReachedTheVeryBottom);
         }
     }
