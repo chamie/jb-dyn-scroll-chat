@@ -22,7 +22,7 @@ This version uses FakeAPI that doesn't make actual web requests but stores the d
 ### `start-be`
 
 Builds the Back-End and starts the server.
-If the Front-End is already built, that's enough to see at [http://localhost:3001](http://localhost:3001).
+If the Front-End is already built, that's enough to open the app at [http://localhost:3001](http://localhost:3001).
 
 ### `build-fe`
 
