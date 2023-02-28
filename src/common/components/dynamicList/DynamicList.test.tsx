@@ -29,7 +29,8 @@ const itemsLongList: Item[] = new Array(100).fill(undefined).map((_, idx) => ({
     text: `Test String ${idx + 1}`
 }));
 
-const IdNameItemComponent: React.ComponentType<Item> = (item) => <>{item.id}: {item.text}</>;
+const IdNameItemComponent: React.ComponentType<Item> = (item) =>
+    <span data-testid={`item${item.id}`}>{item.id}: {item.text}</span>;
 
 describe('Dynamic list component', () => {
     it('should render empty list as empty markup', async () => {
@@ -174,7 +175,7 @@ describe('Dynamic list component', () => {
         );
 
         let containerElement = screen.getByTestId("list-container");
-        const scrillTopInitialRender = containerElement.scrollTop;
+        const scrollTopInitialRender = containerElement.scrollTop;
 
         containerElement.scrollTop = 100;
 
@@ -186,11 +187,11 @@ describe('Dynamic list component', () => {
             />
         );
         containerElement = screen.getByTestId("list-container");
-        const scrillTopReRender = containerElement.scrollTop;
+        const scrollTopReRender = containerElement.scrollTop;
 
         // Assert
-        expect(scrillTopInitialRender).toBe(500);
-        expect(scrillTopReRender).toBe(500);
+        expect(scrollTopInitialRender).toBe(500);
+        expect(scrollTopReRender).toBe(500);
     });
 
     it('should stop keeping the list scrolled to bottom after user scroll', () => {
@@ -229,6 +230,71 @@ describe('Dynamic list component', () => {
         // Assert
         expect(scrollTopInitialRender).toBe(500);
         expect(scrollTopReRender).toBe(100);
+    });
+
+    fit('after scrolling from bottom on update keep the list scrolled so that same items are in same place on screen', () => {
+        // Arrange
+        jest.spyOn(Element.prototype, 'scrollHeight', 'get')
+            .mockImplementation(() => 500);
+
+        let scrollTopValue = -1;
+        jest.spyOn(Element.prototype, 'clientHeight', 'get')
+            .mockImplementation(() => 300);
+
+        jest.spyOn(Element.prototype, 'scrollTop', 'get')
+            .mockImplementation(() => 0);
+        jest.spyOn(Element.prototype, 'scrollTop', 'set')
+            .mockImplementation((value) => scrollTopValue = value);
+
+
+        const itemOffsetReadCounts: Record<string, number> = {};
+
+        jest.spyOn(HTMLElement.prototype, 'offsetTop', 'get')
+            .mockImplementation(function (this: HTMLElement) {
+                if (this.dataset.testid === "item") {
+                    // eslint-disable-next-line testing-library/no-node-access
+                    const testId = this.querySelector("span")?.dataset.testid || "";
+                    const countReads = itemOffsetReadCounts[testId] || 1;
+                    itemOffsetReadCounts[testId] = countReads + 1;
+                    const itemId = parseInt(testId.match(/\d+/)?.[0] || '0');
+                    console.log({ testId, itemId });
+                    return itemId * 7 * countReads; // 7 is a prime number not a factor of any other used numbers
+                }
+
+                return 123;  // 123 doesn't have common factors with either 7 (see above), 90 (list size) or 11 (matching item number)
+            });
+
+        const listHead = itemsLongList.slice(0, -10);
+        const listFoot = itemsLongList.slice(10);
+
+        // Act
+        const view = render(
+            <DynamicList
+                items={listFoot}
+                ElementComponent={IdNameItemComponent}
+                onHitBottom={nop}
+            />
+        );
+
+        let containerElement = screen.getByTestId("list-container");
+        const scrollTopInitialRender = scrollTopValue;
+
+        fireEvent(containerElement, new MouseEvent('scroll'));
+
+        view.rerender(
+            <DynamicList
+                items={listHead}
+                ElementComponent={IdNameItemComponent}
+                onHitBottom={nop}
+            />
+        );
+        
+        const scrollTopReRender = scrollTopValue;
+
+        // Assert
+        expect(scrollTopInitialRender).toBe(500);
+        expect(scrollTopReRender).toBe(77);
+
     });
 
 })

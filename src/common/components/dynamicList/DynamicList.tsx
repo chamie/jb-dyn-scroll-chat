@@ -32,9 +32,17 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
     /** An item that was in the list during previous render, we use it as a reference point of list position */
     const matchingNewItemElementRef = useRef<HTMLDivElement>(null);
 
-    const matchingItemId = items.find(item => item.id === firstItemIdRef.current || item.id === lastItemIdRef.current)?.id;
+    const matchingItemId = items.find(
+        item =>
+            item.id === firstItemIdRef.current
+            || item.id === lastItemIdRef.current
+    )?.id;
 
-    const matchingOldItemOffset = (matchingItemId === firstItemIdRef.current ? firstItemElementRef : lastItemElementRef).current?.offsetTop || 0;
+    const matchingOldItemOffset = (
+        matchingItemId === firstItemIdRef.current
+            ? firstItemElementRef
+            : lastItemElementRef
+    ).current?.offsetTop || 0;
 
     if (items.length) {
         firstItemIdRef.current = items[0].id;
@@ -67,14 +75,17 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
         () => {
             //window.requestAnimationFrame(() => {
             const containerElement = containerRef.current;
-            if (containerElement) {
-                if (positioningModeRef.current === "keep in place") {
-                    const newItemOffset = matchingNewItemElementRef.current?.offsetTop || 0;
-                    containerElement.scrollTop = newItemOffset - scrollOffset;
-                }
-                if (positioningModeRef.current === "stick to bottom") {
-                    containerElement.scrollTop = containerElement.scrollHeight;
-                }
+            if (!containerElement) {
+                return;
+            }
+
+            if (positioningModeRef.current === "keep in place") {
+                const newItemOffset = matchingNewItemElementRef.current?.offsetTop || 0;
+                console.log({ newItemOffset, scrollOffset, matchingOldItemOffset }, containerElement.scrollTop);
+                containerElement.scrollTop = newItemOffset - scrollOffset;
+            }
+            if (positioningModeRef.current === "stick to bottom") {
+                containerElement.scrollTop = containerElement.scrollHeight;
             }
             //});
         });
