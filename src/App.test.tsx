@@ -14,5 +14,5 @@ test('renders learn react link', () => {
     </Router>
   );
 
-  expect(getByText(/Get to the chat/i)).toBeInTheDocument();
+  expect(getByText(/Select a chat from above/i)).toBeInTheDocument();
 });

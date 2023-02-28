@@ -2,9 +2,7 @@ import * as JsonServerAPI from "../../common/services/api/jsonServerAPI";
 import * as FakeAPI from "../../common/services/api/fakeAPI";
 import { getRandomName, getRandomText, rnd } from "../../common/tools";
 
-const useFake = process.env.NODE_ENV === "development";
-
-export const api = useFake ? FakeAPI : JsonServerAPI;
+export const api = process.env.NODE_ENV === "development" ? FakeAPI : JsonServerAPI;
 
 const addMessageToFloodZone = () => {
     setTimeout(() => {
