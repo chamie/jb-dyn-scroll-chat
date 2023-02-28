@@ -281,7 +281,7 @@ describe('Dynamic list component', () => {
             />
         );
 
-        let containerElement = screen.getByTestId("list-container");
+        const containerElement = screen.getByTestId("list-container");
         const scrollTopInitialRender = scrollTopValue;
 
         fireEvent(containerElement, new MouseEvent('scroll'));
