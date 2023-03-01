@@ -81,7 +81,6 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
 
             if (positioningModeRef.current === "keep in place") {
                 const newItemOffset = matchingNewItemElementRef.current?.offsetTop || 0;
-                console.log({ newItemOffset, scrollOffset, matchingOldItemOffset }, containerElement.scrollTop);
                 containerElement.scrollTop = newItemOffset - scrollOffset;
             }
             if (positioningModeRef.current === "stick to bottom") {

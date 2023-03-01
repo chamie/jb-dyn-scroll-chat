@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useParams } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
 import { selectChatMessages, selectChatTitle, selectIsFirstPage, selectIsLastPage } from "./chatsSlice"

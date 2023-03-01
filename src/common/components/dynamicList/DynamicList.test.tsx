@@ -38,10 +38,6 @@ describe('Dynamic list component', () => {
         const items: { id: number }[] = [];
         const elementComponent: React.ComponentType<{ id: number }> = ({ id }) => (<>{id}</>);
 
-
-        const mockUseInViewPort = uivp.useIsInViewport as jest.Mock<typeof uivp>;
-        mockUseInViewPort.mockImplementation();
-
         // Act
         render(
             <DynamicList
