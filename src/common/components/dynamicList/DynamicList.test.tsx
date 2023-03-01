@@ -190,7 +190,7 @@ describe('Dynamic list component', () => {
         expect(scrollTopReRender).toBe(500);
     });
 
-    fit('should scroll the list to bottom when listId changes', () => {
+    it('should scroll the list to bottom when listId changes', () => {
         // Arrange
         jest.spyOn(Element.prototype, 'scrollHeight', 'get')
             .mockImplementation(() => 500);
