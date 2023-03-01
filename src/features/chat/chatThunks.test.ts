@@ -15,7 +15,7 @@ const chatId = 'chat1';
 
 describe('chats thunks', () => {
     describe('loadMessages', () => {
-        fit('should load messages from API for a given chat using given offsetId and put into its state', async () => {
+        it('should load messages from API for a given chat using given offsetId and put into its state', async () => {
             // Arrange
             const selectLoadStateMock = jest.spyOn(chatsSlice, 'selectLoadState').mockImplementation(() => () => 'idle');
 
@@ -60,7 +60,6 @@ describe('chats thunks', () => {
             const setLoadStateMock = mockActions.setLoadState;
             const updateChatMock = mockActions.updateChat;
 
-            console.log("updateChatMock", updateChatMock.mock.calls[0][0]);
             expect(selectLoadStateMock).toBeCalledWith(chatId);
             expect(dispatch).toBeCalledTimes(2);
             expect(setLoadStateMock).toBeCalledWith({ chatId, state: "loading" });

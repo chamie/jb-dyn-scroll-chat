@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import { useIsInViewport } from "../../hooks/isInViewPort";
 import styles from './DynamicList.module.css';
 
