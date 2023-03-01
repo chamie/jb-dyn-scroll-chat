@@ -2,25 +2,16 @@ import { RootState } from '../../app/store';
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { InitState } from '../../common/types/initState';
 import { LoadState } from '../../common/types/loadState';
-import { Message } from './models/message';
+import { ChatModel } from './models/chat';
 
 export const pageSize = 20;
 export const batchSize = 5;
-
-type ChatModel = {
-    title: string,
-    messages: Message[],
-    loadState: LoadState,
-    initState: InitState,
-    isLastPage: boolean,
-    isFirstPage: boolean,
-}
 
 export type ChatState = {
     chatRooms: Record<string, ChatModel>,
 }
 
-const initialState: ChatState = {
+export const initialState: ChatState = {
     chatRooms: {
         floodZone: {
             messages: [],
