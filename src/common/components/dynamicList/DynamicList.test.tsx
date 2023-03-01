@@ -190,6 +190,44 @@ describe('Dynamic list component', () => {
         expect(scrollTopReRender).toBe(500);
     });
 
+    fit('should scroll the list to bottom when listId changes', () => {
+        // Arrange
+        jest.spyOn(Element.prototype, 'scrollHeight', 'get')
+            .mockImplementation(() => 500);
+        jest.spyOn(Element.prototype, 'clientHeight', 'get')
+            .mockImplementation(() => 300);
+
+        // Act
+        const view = render(
+            <DynamicList
+                items={items123}
+                ElementComponent={IdNameItemComponent}
+                onHitBottom={nop}
+                listId={1}
+            />
+        );
+
+        let containerElement = screen.getByTestId("list-container");
+        const scrollTopInitialRender = containerElement.scrollTop;
+
+        containerElement.scrollTop = 100;
+
+        view.rerender(
+            <DynamicList
+                items={items123}
+                ElementComponent={IdNameItemComponent}
+                onHitBottom={nop}
+                listId={2}
+            />
+        );
+        containerElement = screen.getByTestId("list-container");
+        const scrollTopReRender = containerElement.scrollTop;
+
+        // Assert
+        expect(scrollTopInitialRender).toBe(500);
+        expect(scrollTopReRender).toBe(500);
+    });
+
     it('should stop keeping the list scrolled to bottom after user scroll', () => {
         // Arrange
         jest.spyOn(Element.prototype, 'scrollHeight', 'get')
@@ -228,7 +266,7 @@ describe('Dynamic list component', () => {
         expect(scrollTopReRender).toBe(100);
     });
 
-    fit('after scrolling from bottom on update keep the list scrolled so that same items are in same place on screen', () => {
+    it('after scrolling from bottom on update keep the list scrolled so that same items are in same place on screen', () => {
         // Arrange
         jest.spyOn(Element.prototype, 'scrollHeight', 'get')
             .mockImplementation(() => 500);
@@ -242,7 +280,6 @@ describe('Dynamic list component', () => {
         jest.spyOn(Element.prototype, 'scrollTop', 'set')
             .mockImplementation((value) => scrollTopValue = value);
 
-
         const itemOffsetReadCounts: Record<string, number> = {};
 
         jest.spyOn(HTMLElement.prototype, 'offsetTop', 'get')
@@ -253,7 +290,6 @@ describe('Dynamic list component', () => {
                     const countReads = itemOffsetReadCounts[testId] || 1;
                     itemOffsetReadCounts[testId] = countReads + 1;
                     const itemId = parseInt(testId.match(/\d+/)?.[0] || '0');
-                    console.log({ testId, itemId });
                     return itemId * 7 * countReads; // 7 is a prime number not a factor of any other used numbers
                 }
 
