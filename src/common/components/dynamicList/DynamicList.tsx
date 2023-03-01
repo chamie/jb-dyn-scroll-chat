@@ -21,13 +21,15 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
     /** Refers to the bottom edge separator. When it comes into view, we load next messages */
     const loadNextTriggerRef = useRef<HTMLDivElement>(null);
 
+    /** Keeps tabs on all the items already rendered to the DOM */
     const knownItemElementsRef = useRef(new Map<string | number, HTMLDivElement>());
 
+    /** Id of an item present in both current and the previous render */
     const matchingItemId = items.find(
         item => knownItemElementsRef.current.has(item.id)
     )?.id;
 
-    const matchingOldItemOffset = (
+    const matchingItemPreviousOffset = (
         matchingItemId === undefined
             ? undefined
             : knownItemElementsRef.current.get(matchingItemId)
@@ -37,12 +39,12 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
 
     const containerRef = useRef<HTMLDivElement>(null);
 
-    /** Distance from the top of the matching element
+    /** Distance from the top of the matching item
      * to the top of the container's visible part */
     let scrollOffset = 0;
     if (containerRef.current) {
         const containerScrollTop = containerRef.current.scrollTop || 0;
-        scrollOffset = matchingOldItemOffset - containerScrollTop;
+        scrollOffset = matchingItemPreviousOffset - containerScrollTop;
     }
 
     const positioningModeRef = useRef<PositioningMode>("stick to bottom");

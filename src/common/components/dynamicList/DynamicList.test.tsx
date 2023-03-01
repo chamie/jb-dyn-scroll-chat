@@ -299,10 +299,9 @@ describe('Dynamic list component', () => {
         const listHead = itemsLongList.slice(0, -20);
         const listFoot = itemsLongList.slice(10, -10);
 
-        // Magic numbers:
+        // Magic numbers rationale:
         // 123 (default offset value), 7 (item offset multiplicator), 80 (list size) and 11 (matching item index).
-        // Rationale: they are all coprime integers,
-        // so the expected end result is not achievable by chance.
+        // they are all coprime integers, so the expected end result is not achievable by chance.
 
         // Act
         const view = render(
