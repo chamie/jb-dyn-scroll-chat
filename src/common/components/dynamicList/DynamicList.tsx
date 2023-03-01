@@ -21,33 +21,19 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
     /** Refers to the bottom edge separator. When it comes into view, we load next messages */
     const loadNextTriggerRef = useRef<HTMLDivElement>(null);
 
-    /** Expected to be used before being set (i.e. using value from the previous render) */
-    const firstItemElementRef = useRef<HTMLDivElement>(null);
-    /** Expected to be used before being set (i.e. using value from the previous render) */
-    const lastItemElementRef = useRef<HTMLDivElement>(null);
-
-    const firstItemIdRef = useRef<string | number>(-1);
-    const lastItemIdRef = useRef<string | number>(-1);
-
-    /** An item that was in the list during previous render, we use it as a reference point of list position */
-    const matchingNewItemElementRef = useRef<HTMLDivElement>(null);
+    const knownItemElementsRef = useRef(new Map<string | number, HTMLDivElement>());
 
     const matchingItemId = items.find(
-        item =>
-            item.id === firstItemIdRef.current
-            || item.id === lastItemIdRef.current
+        item => knownItemElementsRef.current.has(item.id)
     )?.id;
 
     const matchingOldItemOffset = (
-        matchingItemId === firstItemIdRef.current
-            ? firstItemElementRef
-            : lastItemElementRef
-    ).current?.offsetTop || 0;
+        matchingItemId === undefined
+            ? undefined
+            : knownItemElementsRef.current.get(matchingItemId)
+    )?.offsetTop || 0;
 
-    if (items.length) {
-        firstItemIdRef.current = items[0].id;
-        lastItemIdRef.current = items.slice(-1)[0].id;
-    }
+    knownItemElementsRef.current.clear();
 
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -79,8 +65,9 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
                 return;
             }
 
-            if (positioningModeRef.current === "keep in place") {
-                const newItemOffset = matchingNewItemElementRef.current?.offsetTop || 0;
+            if (positioningModeRef.current === "keep in place" && matchingItemId) {
+                const matchingNewItemElement = knownItemElementsRef.current.get(matchingItemId);
+                const newItemOffset = matchingNewItemElement?.offsetTop || 0;
                 containerElement.scrollTop = newItemOffset - scrollOffset;
             }
             if (positioningModeRef.current === "stick to bottom") {
@@ -109,6 +96,10 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
         }
     });
 
+    const saveItemRef = (itemId: string | number) => (element: HTMLDivElement) => {
+        knownItemElementsRef.current.set(itemId, element);
+    }
+
     const onScroll = (event: React.UIEvent<HTMLDivElement, UIEvent>) => {
         const { scrollTop, clientHeight, scrollHeight } = event.currentTarget;
         const scrolledToBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 1;
@@ -127,20 +118,9 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
                 <div data-testid="upper-loader" ref={loadPrevTriggerRef} className={styles['edgeline-loader']}>Loading more…</div>
             }
 
-            {items.map((item, idx) => {
-                let ref: React.RefObject<HTMLDivElement> | undefined = undefined;
-                if (item.id === matchingItemId) {
-                    ref = matchingNewItemElementRef;
-                }
-                if (idx === 0) {
-                    ref = firstItemElementRef;
-                }
-                if (idx === items.length - 1) {
-                    ref = lastItemElementRef;
-                }
-
-                return <div data-testid="item" ref={ref} key={item.id}> <ElementComponent {...item} key={item.id} /></div>;
-            })}
+            {items.map(item =>
+                <div data-testid="item" ref={saveItemRef(item.id)} key={item.id}> <ElementComponent {...item} key={item.id} /></div>
+            )}
 
             {
                 loadNextRecords &&
