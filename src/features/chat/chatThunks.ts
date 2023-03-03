@@ -51,7 +51,7 @@ export const fetchPreviousMessages = (chatId: string): AsyncAppThunk =>
 export const fetchNextMessages = (chatId: string): AsyncAppThunk =>
     async (dispatch, getState) => {
         try {
-            const lowerBoundMessageId = selectChatMessages(chatId)(getState()).slice(-1)[0].id - batchSize;
+            const lowerBoundMessageId = selectChatMessages(chatId)(getState()).slice(-batchSize)[0].id;
             dispatch(loadMessages(chatId, lowerBoundMessageId + pageSize));
         } catch {
             debugger;
