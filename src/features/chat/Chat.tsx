@@ -18,7 +18,7 @@ const MessageComponent = (message: Message) => (
 )
 
 export const Chat = () => {
-    const isAtBottomRef = useRef<boolean>(true);
+    const shouldLoadMessages = useRef<boolean>(true);
     const { chatId = "floodZone" } = useParams();
     const isArchive = chatId.startsWith("archi");
 
@@ -28,15 +28,18 @@ export const Chat = () => {
 
     useEffect(() => {
         interval.current = window.setInterval(() => {
-            if (isAtBottomRef.current) {
+            if (shouldLoadMessages.current) {
                 dispatch(loadMessages(chatId));
+                if(isArchive){
+                    shouldLoadMessages.current = false;
+                }
             }
         }, 1000);
 
         return () => {
             clearInterval(interval.current);
         }
-    }, [chatId, dispatch]);
+    }, [chatId, dispatch, isArchive]);
 
     useEffect(() => {
         dispatch(init(chatId));
@@ -75,7 +78,7 @@ export const Chat = () => {
                 loadPreviousRecords={loadPreviousRecords}
                 loadNextRecords={loadNextRecords}
                 onHitBottom={isBottom => {
-                    isAtBottomRef.current = isBottom;
+                    shouldLoadMessages.current = isBottom;
                 }}
                 listId={chatId}
             />

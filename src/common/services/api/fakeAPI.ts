@@ -1,9 +1,19 @@
 import { Message } from "../../../features/chat/models/message";
-import { rnd } from "../../tools";
+import { getRandomName, getRandomText, rnd } from "../../tools";
 import { Results } from "../../types/results";
 
 const fakeChatMessages: Record<string, Message[]> = {
     floodZone: [],
+    archive: new Array(10000).fill(null).map((_, id) => {
+        const date = (new Date().toISOString().match(/T([\d:]+)\./)!)[1];
+        return ({
+            chatId: 'archive',
+            date,
+            id,
+            name: getRandomName(),
+            text: getRandomText(),
+        }) as Message;
+    })
 };
 
 const delayedResolve = <T>(value: T): Promise<T> =>
