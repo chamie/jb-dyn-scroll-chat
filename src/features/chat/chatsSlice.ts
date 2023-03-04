@@ -4,7 +4,7 @@ import { InitState } from '../../common/types/initState';
 import { LoadState } from '../../common/types/loadState';
 import { ChatModel } from './models/chat';
 
-export const pageSize = 20;
+export const pageSize = 100;
 export const batchSize = 5;
 
 export type ChatState = {
@@ -24,6 +24,14 @@ export const initialState: ChatState = {
         anotherOne: {
             messages: [],
             title: "Another One",
+            loadState: "idle",
+            initState: "initial",
+            isLastPage: true,
+            isFirstPage: true,
+        },
+        archive: {
+            messages: [],
+            title: "Archive",
             loadState: "idle",
             initState: "initial",
             isLastPage: true,

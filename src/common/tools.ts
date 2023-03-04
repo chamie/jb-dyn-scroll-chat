@@ -16,3 +16,5 @@ export const getRandomText = (): string => {
 };
 
 export const getRandomName = (): string => getRandomElement(subject);
+
+export const deepEqual = (a: any, b: any) => JSON.stringify(a) === JSON.stringify(b);

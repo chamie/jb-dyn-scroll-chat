@@ -2,14 +2,14 @@ import { AsyncAppThunk } from "../../app/store";
 import { api } from "./chatAPI";
 import { batchSize, chatsSlice, pageSize, selectChatMessages, selectInitState, selectLoadState } from "./chatsSlice";
 
-export const loadMessages = (chatId: string, offsetId?: number): AsyncAppThunk =>
+export const loadMessages = (chatId: string, offsetId?: number, _pageSize = pageSize): AsyncAppThunk =>
     async (dispatch, getState) => {
         if (selectLoadState(chatId)(getState()) === "loading") {
             return;
         }
         dispatch(chatsSlice.actions.setLoadState({ chatId, state: "loading" }));
         try {
-            const { data: messages, isFirst, isLast } = await api.getMessages(chatId, pageSize, offsetId);
+            const { data: messages, isFirst, isLast } = await api.getMessages(chatId, _pageSize, offsetId);
 
             dispatch(chatsSlice.actions.updateChat({
                 chatId,
@@ -53,7 +53,19 @@ export const fetchNextMessages = (chatId: string): AsyncAppThunk =>
         try {
             const lowerBoundMessageId = selectChatMessages(chatId)(getState()).slice(-batchSize)[0].id;
             dispatch(loadMessages(chatId, lowerBoundMessageId + pageSize));
-        } catch {
+        } catch (e) {
             debugger;
+            console.error(e);
         }
     };
+
+export const fetchMoreMessages = (chatId: string): AsyncAppThunk =>
+    async (dispatch, getState) => {
+        const messages = selectChatMessages(chatId)(getState());
+        try {
+            dispatch(loadMessages(chatId, undefined, messages.length + pageSize));
+        } catch (e) {
+            debugger;
+            console.error(e);
+        }
+    }

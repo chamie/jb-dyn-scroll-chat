@@ -1,6 +1,7 @@
 import * as JsonServer from 'json-server';
 import { Results } from '../src/common/types/results';
 import * as open from 'open';
+import { getRandomName, getRandomText } from "../src/common/tools";
 
 type Message = {
     name: string,
@@ -11,8 +12,17 @@ type Message = {
 }
 
 const data = {
-    messages: [] as Message[],
-    chats: [{ id: "floodZone" }, { id: "anotherOne" }]
+    messages: new Array(10000).fill(null).map((_, id) => {
+        const date = (new Date().toISOString().match(/T([\d:]+)\./)!)[1];
+        return ({
+            chatId: 'archive',
+            date,
+            id,
+            name: getRandomName(),
+            text: getRandomText(),
+        }) as Message;
+    }),
+    chats: [{ id: "floodZone" }, { id: "anotherOne" }, { id: "archive" }],
 }
 
 const server = JsonServer.create();

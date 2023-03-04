@@ -2,10 +2,11 @@ import { useEffect, useRef } from "react";
 import { useParams } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
 import { selectChatMessages, selectChatTitle, selectIsFirstPage, selectIsLastPage } from "./chatsSlice"
-import { fetchPreviousMessages, fetchNextMessages, init, loadMessages } from "./chatThunks";
+import { init, fetchMoreMessages, fetchNextMessages, fetchPreviousMessages, loadMessages } from "./chatThunks";
 import styles from "./Chat.module.css";
 import { Message } from "./models/message";
 import { DynamicList } from "../../common/components/dynamicList/DynamicList";
+import { ArchiveList } from "../../common/components/dynamicList/ArchiveList";
 
 const MessageComponent = (message: Message) => (
     <li className={styles.message} key={message.id}>
@@ -17,9 +18,9 @@ const MessageComponent = (message: Message) => (
 )
 
 export const Chat = () => {
-    let { chatId = "floodZone" } = useParams();
-
     const isAtBottomRef = useRef<boolean>(true);
+    const { chatId = "floodZone" } = useParams();
+    const isArchive = chatId.startsWith("archi");
 
     const dispatch = useAppDispatch();
 
@@ -49,23 +50,35 @@ export const Chat = () => {
         : () => dispatch(fetchNextMessages(chatId));
 
     const isFirstPage = useAppSelector(selectIsFirstPage(chatId));
+
     const loadPreviousRecords = isFirstPage
         ? undefined
         : () => dispatch(fetchPreviousMessages(chatId));
+
+    const addPreviousRecords = isFirstPage
+        ? undefined
+        : () => dispatch(fetchMoreMessages(chatId));
 
     const title = useAppSelector(selectChatTitle(chatId));
 
     return <div>
         <h4>{title}</h4>
-        <DynamicList
-            items={messages}
-            ElementComponent={MessageComponent}
-            loadPreviousRecords={loadPreviousRecords}
-            loadNextRecords={loadNextRecords}
-            onHitBottom={isBottom => {
-                isAtBottomRef.current = isBottom;
-            }}
-            listId={chatId}
-        />
+        {isArchive
+            ? <ArchiveList
+                items={messages}
+                ElementComponent={MessageComponent}
+                loadPreviousRecords={addPreviousRecords}
+            />
+            : <DynamicList
+                items={messages}
+                ElementComponent={MessageComponent}
+                loadPreviousRecords={loadPreviousRecords}
+                loadNextRecords={loadNextRecords}
+                onHitBottom={isBottom => {
+                    isAtBottomRef.current = isBottom;
+                }}
+                listId={chatId}
+            />
+        }
     </div>;
 }

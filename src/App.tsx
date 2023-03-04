@@ -9,6 +9,7 @@ function App() {
         <div className="top-menu">
           <Link to="/chats/floodZone">FloodZone chat</Link>
           <Link to="/chats/anotherOne">…and another one</Link>
+          <Link to="/chats/archive">Archive chat (immutable list)</Link>
         </div>
         <Routes>
           <Route path="/" element={<>Select a chat from above ↑</>} />

@@ -13,3 +13,13 @@
     background-image: url("./btn-loading-back.svg");
     background-size: cover;
 }
+
+.item {
+    overflow: hidden;
+}
+
+.items {
+    padding: 0;
+    border: none;
+    margin: 0;
+}
