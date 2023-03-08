@@ -25,3 +25,14 @@
 h4 {
     margin: 0;
 }
+
+.error {
+    color: red;
+    box-shadow: 0 0 6px red;
+    padding: 5pt 20pt;
+    box-sizing: border-box;
+    position: absolute;
+    background: #ffc0c0;
+    left: 10vw;
+    right: 10vw;
+}

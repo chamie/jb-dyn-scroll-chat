@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useParams } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
-import { selectChatMessages, selectChatTitle, selectIsFirstPage, selectIsLastPage } from "./chatsSlice"
+import { selectChatMessages, selectChatTitle, selectIsFirstPage, selectIsLastPage, selectLoadState } from "./chatsSlice"
 import { init, fetchMoreMessages, fetchNextMessages, fetchPreviousMessages, loadMessages } from "./chatThunks";
 import styles from "./Chat.module.css";
 import { Message } from "./models/message";
@@ -64,8 +64,15 @@ export const Chat = () => {
 
     const title = useAppSelector(selectChatTitle(chatId));
 
+    const isLoadFailed = useAppSelector(selectLoadState(chatId)) === "failed";
+
     return <div>
         <h4>{title}</h4>
+        {
+            isLoadFailed
+                ? <h1 className={styles.error}>Load failed, try reloading the page</h1>
+                : null
+        }
         {isArchive
             ? <ArchiveList
                 items={messages}
