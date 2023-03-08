@@ -50,22 +50,32 @@ export const fetchPreviousMessages = (chatId: string): AsyncAppThunk =>
 
 export const fetchNextMessages = (chatId: string): AsyncAppThunk =>
     async (dispatch, getState) => {
-        try {
-            const lowerBoundMessageId = selectChatMessages(chatId)(getState()).slice(-batchSize)[0].id;
-            dispatch(loadMessages(chatId, lowerBoundMessageId + pageSize));
-        } catch (e) {
-            debugger;
-            console.error(e);
-        }
+        const lowerBoundMessageId = selectChatMessages(chatId)(getState()).slice(-batchSize)[0].id;
+        dispatch(loadMessages(chatId, lowerBoundMessageId + pageSize));
     };
 
 export const fetchMoreMessages = (chatId: string): AsyncAppThunk =>
     async (dispatch, getState) => {
+
+        if (selectLoadState(chatId)(getState()) === "loading") {
+            return;
+        }
         const messages = selectChatMessages(chatId)(getState());
+
+        dispatch(chatsSlice.actions.setLoadState({ chatId, state: "loading" }));
         try {
-            dispatch(loadMessages(chatId, undefined, messages.length + pageSize));
-        } catch (e) {
-            debugger;
-            console.error(e);
+            const { data: newMessages, isFirst, isLast } = await api.getMessages(chatId, pageSize, messages[0].id);
+
+            dispatch(chatsSlice.actions.updateChat({
+                chatId,
+                chatData: {
+                    messages: newMessages.concat(messages.slice(1)),
+                    isLastPage: isLast,
+                    isFirstPage: isFirst,
+                    loadState: "idle"
+                }
+            }));
+        } catch {
+            dispatch(chatsSlice.actions.setLoadState({ chatId, state: "failed" }));
         }
     }

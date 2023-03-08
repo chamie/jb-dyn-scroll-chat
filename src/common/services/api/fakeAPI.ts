@@ -21,7 +21,7 @@ const delayedResolve = <T>(value: T): Promise<T> =>
 
 export const getMessages = (chatId: string, limit = 20, offsetId?: number): Promise<Results<Message>> => {
     const messages = fakeChatMessages[chatId] || [];
-    const rangeEnd = Math.min(offsetId || Infinity, messages.length);
+    const rangeEnd = Math.min((offsetId || Infinity) + 1, messages.length);
     const rangeStart = Math.max(rangeEnd - limit, 0);
 
     const data = messages.slice(rangeStart, rangeEnd);
