@@ -104,7 +104,7 @@ const DynamicListComponent = <T extends { id: string | number },>(props: Props<T
 
     const onScroll = (event: React.UIEvent<HTMLDivElement, UIEvent>) => {
         const { scrollTop, clientHeight, scrollHeight } = event.currentTarget;
-        const scrolledToBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 1;
+        const scrolledToBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 3;
         const hasReachedTheVeryBottom = scrolledToBottom && !loadNextRecords;
         const wasAtBottom = positioningModeRef.current === "stick to bottom";
         positioningModeRef.current = hasReachedTheVeryBottom ? "stick to bottom" : "keep in place";
