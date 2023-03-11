@@ -2,17 +2,13 @@ import React, { useLayoutEffect, useRef, useState } from "react";
 import { deepEqual as _deepEqual } from "../../tools";
 import styles from './DynamicList.module.css';
 import memoizeOne from "memoize-one";
+import { ItemSizingInfo } from "./itemSizing";
 
 export type Props<T> = {
     items: T[],
     ElementComponent: React.ComponentType<T>,
     loadPreviousRecords?: () => void,
     renderBufferSize?: number,
-}
-
-type ItemSizingInfo = {
-    id: string | number,
-    height: number,
 }
 
 type RenderInfo = {
@@ -33,30 +29,31 @@ const deepEqual = memoizeOne(_deepEqual);
  * @returns ids of the items to be rendered given these sizes and the scroll position, and padding sizes that would substitute the non-rendered items.
  */
 const getVisibleItems =
-    (itemInfos: ItemSizingInfo[], offsetHeight: number, scrollHeight: number, scrollTop: number, bufferSize: number): RenderInfo => {
-        // Distamce from the top of container's visible part to its content bottom:
+    (itemInfos: readonly ItemSizingInfo[], offsetHeight: number, scrollHeight: number, scrollTop: number, bufferSize: number): RenderInfo => {
+        /** Distamce from the top of container's visible part to its content bottom: */
         const upperBound = scrollHeight - scrollTop + bufferSize;
-        // Distance from the bottom of container's visible part to its content bottom:
+        /** Distance from the bottom of container's visible part to its content bottom: */
         const lowerBound = scrollHeight - scrollTop - offsetHeight - bufferSize;
 
         let itemBottom = 0;
         let paddingTop = 0;
         let paddingBottom = 0;
-        const items: (string | number)[] = [];
+        const itemIds: (string | number)[] = [];
 
-        itemInfos.reverse().forEach(item => {
-            const itemTop = itemBottom + item.height;
+        for (let idx = itemInfos.length - 1; idx >= 0; idx--) {
+            const [id, height] = itemInfos[idx];
+            const itemTop = itemBottom + height;
             if (itemBottom <= upperBound && itemTop >= lowerBound) {
-                items.push(item.id)
-            } else if (itemBottom < lowerBound) {
-                paddingBottom += item.height;
-            } else if (itemTop > upperBound) {
-                paddingTop += item.height;
+                itemIds.push(id)
+            } else if (itemBottom > upperBound) {
+                paddingTop += height;
+            } else if (itemTop < lowerBound) {
+                paddingBottom += height;
             }
-            itemBottom += item.height;
-        });
+            itemBottom += height;
+        }
 
-        return { items, paddingBottom, paddingTop };
+        return { items: itemIds, paddingBottom, paddingTop };
     };
 
 const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T>) => {
@@ -69,7 +66,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
     const renderedItemElementsRef = useRef(new Map<string | number, HTMLDivElement>());
 
     /** Stores the heights of all known items, populated on their first render */
-    const itemHeightsListRef = useRef([] as [string | number, number][]);
+    const itemHeightsListRef = useRef([] as ItemSizingInfo[]);
     const heights = new Map(itemHeightsListRef.current);
 
     /**
@@ -161,7 +158,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
         let knownHeightsList = itemHeightsListRef.current;
         const knownHeightsMap = new Map(knownHeightsList);
 
-        const newlyRenderedItemsHeights: [string | number, number][] = [];
+        const newlyRenderedItemsHeights: ItemSizingInfo[] = [];
         for (const [id, element] of renderedItemElementsRef.current.entries()) {
             if (knownHeightsMap.has(id)) {
                 break;
@@ -172,8 +169,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
         knownHeightsList = newlyRenderedItemsHeights.concat(knownHeightsList);
         itemHeightsListRef.current = knownHeightsList;
 
-        const itemHeights: ItemSizingInfo[] = knownHeightsList.map(([id, height]) => ({ id, height }));
-        const updatedRenderInfo = getVisibleItems(itemHeights, offsetHeight, scrollHeight, scrollTop, renderBufferSize);
+        const updatedRenderInfo = getVisibleItems(knownHeightsList, offsetHeight, scrollHeight, scrollTop, renderBufferSize);
         if (!deepEqual(updatedRenderInfo, renderInfo)) {
             setRenderInfo(updatedRenderInfo);
         }
