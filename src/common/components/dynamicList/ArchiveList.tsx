@@ -72,12 +72,6 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
     const itemHeightsRef = useRef(new Map<string | number, number>());
 
     const heights = itemHeightsRef.current;
-    knownItemElementsRef.current.forEach((div, id) => {
-        if (!heights.has(id)) {
-            heights.set(id, div.scrollHeight);
-        }
-    })
-
     /** Id of an item present in both current and the previous render.
      * It will be used as a reference point to the adjust scroll position
      * and avoid list jumping on loading additional items.
