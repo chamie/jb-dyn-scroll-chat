@@ -66,27 +66,28 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
     const hasListChanged = !deepEqual(previousItems.current, items);
 
     /** Stores rendered elements of the items added to DOM during the prev render */
-    const knownItemElementsRef = useRef(new Map<string | number, HTMLDivElement>());
+    const renderedItemElementsRef = useRef(new Map<string | number, HTMLDivElement>());
 
     /** Stores the heights of all known items, populated on their first render */
-    const itemHeightsRef = useRef(new Map<string | number, number>());
+    const itemHeightsListRef = useRef([] as [string | number, number][]);
+    const heights = new Map(itemHeightsListRef.current);
 
-    const heights = itemHeightsRef.current;
-    /** Id of an item present in both current and the previous render.
-     * It will be used as a reference point to the adjust scroll position
+    /**
+     * Id of any item present in both current and the previous render.
+     * It will be used as a reference point to adjust the scroll position
      * and avoid list jumping on loading additional items.
      */
     const matchingItemId = items.find(
-        item => knownItemElementsRef.current.has(item.id)
+        item => renderedItemElementsRef.current.has(item.id)
     )?.id;
 
     const matchingItemPreviousOffset = (
         matchingItemId === undefined
             ? undefined
-            : knownItemElementsRef.current.get(matchingItemId)
+            : renderedItemElementsRef.current.get(matchingItemId)
     )?.offsetTop || 0;
 
-    knownItemElementsRef.current.clear();
+    renderedItemElementsRef.current.clear();
 
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -123,7 +124,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
                 return;
             }
 
-            // If list is filled with loaded items for the first time
+            // If list is populated for the first time
             if (!previousItems.current.length && items.length) {
                 containerElement.scrollTop = containerElement.scrollHeight;
             }
@@ -131,7 +132,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
             previousItems.current = items;
 
             if (matchingItemId) {
-                const matchingNewItemElement = knownItemElementsRef.current.get(matchingItemId);
+                const matchingNewItemElement = renderedItemElementsRef.current.get(matchingItemId);
                 const newItemOffset = matchingNewItemElement?.offsetTop || 0;
                 skipOnScroll.current = true;
                 containerElement.scrollTop = newItemOffset - scrollOffset;
@@ -157,14 +158,21 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
             loadPreviousRecords();
         }
 
-        const heights = itemHeightsRef.current;
-        knownItemElementsRef.current.forEach((element, id) => {
-            if (!heights.has(id)) {
-                heights.set(id, element.scrollHeight);
-            }
-        });
+        let knownHeightsList = itemHeightsListRef.current;
+        const knownHeightsMap = new Map(knownHeightsList);
 
-        const itemHeights: ItemSizingInfo[] = [...heights.entries()].map(([id, height]) => ({ id, height })).sort((a, b) => a.id > b.id ? 1 : a.id === b.id ? 0 : -1);
+        const newlyRenderedItemsHeights: [string | number, number][] = [];
+        for (const [id, element] of renderedItemElementsRef.current.entries()) {
+            if (knownHeightsMap.has(id)) {
+                break;
+            }
+            newlyRenderedItemsHeights.push([id, element.offsetHeight]);
+        };
+
+        knownHeightsList = newlyRenderedItemsHeights.concat(knownHeightsList);
+        itemHeightsListRef.current = knownHeightsList;
+
+        const itemHeights: ItemSizingInfo[] = knownHeightsList.map(([id, height]) => ({ id, height }));
         const updatedRenderInfo = getVisibleItems(itemHeights, offsetHeight, scrollHeight, scrollTop, renderBufferSize);
         if (!deepEqual(updatedRenderInfo, renderInfo)) {
             setRenderInfo(updatedRenderInfo);
@@ -180,12 +188,12 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
 
             <div className={styles.items} style={{ paddingTop, paddingBottom }}>
                 {items.map((item, idx) =>
-                    itemsToShow.has(item.id) || !itemHeightsRef.current.has(item.id)
+                    itemsToShow.has(item.id) || !heights.has(item.id)
                         ? <div
                             className={styles.item}
                             data-divider={!(idx % 20) ? ">============================================<" : undefined}
                             data-testid="item"
-                            ref={(element: HTMLDivElement) => knownItemElementsRef.current.set(item.id, element)}
+                            ref={(element: HTMLDivElement) => renderedItemElementsRef.current.set(item.id, element)}
                             key={item.id}>
                             <ElementComponent {...item} key={item.id} />
                         </div>
