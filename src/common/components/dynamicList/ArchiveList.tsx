@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { deepEqual as _deepEqual } from "../../tools";
 import styles from './DynamicList.module.css';
 import memoizeOne from "memoize-one";
@@ -29,29 +29,42 @@ const deepEqual = memoizeOne(_deepEqual);
  * @returns ids of the items to be rendered given these sizes and the scroll position, and padding sizes that would substitute the non-rendered items.
  */
 const getVisibleItems =
-    (itemInfos: readonly ItemSizingInfo[], offsetHeight: number, scrollHeight: number, scrollTop: number, bufferSize: number): RenderInfo => {
+    (itemInfos: readonly ItemSizingInfo[], offsetHeight: number, scrollHeight: number, scrollTop: number, bufferSize: number, itemOffsetsIndex: number[]): RenderInfo => {
         /** Distamce from the top of container's visible part to its content bottom: */
         const upperBound = scrollHeight - scrollTop + bufferSize;
         /** Distance from the bottom of container's visible part to its content bottom: */
         const lowerBound = scrollHeight - scrollTop - offsetHeight - bufferSize;
 
-        let itemBottom = 0;
-        let paddingTop = 0;
+        const rangeId = upperBound >> 10;
+
+        const rangeTopItemIdx = itemInfos.length - 1 - (itemOffsetsIndex[rangeId] || 0);
+
+        let paddingTop: number | null = null;
         let paddingBottom = 0;
         const itemIds: (string | number)[] = [];
 
-        for (let idx = itemInfos.length - 1; idx >= 0; idx--) {
-            const [id, height] = itemInfos[idx];
-            const itemTop = itemBottom + height;
-            if (itemBottom <= upperBound && itemTop >= lowerBound) {
-                itemIds.push(id)
-            } else if (itemBottom > upperBound) {
-                paddingTop += height;
-            } else if (itemTop < lowerBound) {
-                paddingBottom += height;
+        for (let idx = rangeTopItemIdx; idx < itemInfos.length; idx++) {
+            const [id, sizing] = itemInfos[idx];
+            if (sizing.bottom > upperBound) {
+                continue;
             }
-            itemBottom += height;
+
+            itemIds.unshift(id);
+
+            const itemTop = sizing.height + sizing.bottom;
+
+            if (itemTop < lowerBound) {
+                paddingBottom = itemTop;
+                break;
+            }
+
+            if (itemTop >= upperBound && sizing.bottom <= upperBound && paddingTop === null) {
+                const topItem = itemInfos[0][1];
+                paddingTop = topItem.bottom + topItem.height - itemTop;
+            }
         }
+
+        paddingTop = paddingTop ?? 0;
 
         return { items: itemIds, paddingBottom, paddingTop };
     };
@@ -65,9 +78,11 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
     /** Stores rendered elements of the items added to DOM during the prev render */
     const renderedItemElementsRef = useRef(new Map<string | number, HTMLDivElement>());
 
-    /** Stores the heights of all known items, populated on their first render */
+    /** Stores the heights of all known items, populated on their first render, ordered top to bottom */
     const itemHeightsListRef = useRef([] as ItemSizingInfo[]);
     const heights = new Map(itemHeightsListRef.current);
+
+    const itemOffsetsIndex = useRef([] as number[]);
 
     /**
      * Id of any item present in both current and the previous render.
@@ -99,9 +114,11 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
         scrollOffset = matchingItemPreviousOffset - containerScrollTop;
     }
 
-    const [renderInfo, setRenderInfo] = useState<RenderInfo>({ items: items.map(x => x.id), paddingBottom: 0, paddingTop: 0 });
+    const itemsIds = useMemo(() => items.map(x => x.id), [items]);
 
-    const itemsToShow = renderInfo.items.length ? new Set(renderInfo.items) : new Set(items.map(x => x.id));
+    const [renderInfo, setRenderInfo] = useState<RenderInfo>({ items: itemsIds, paddingBottom: 0, paddingTop: 0 });
+
+    const itemsToShow = renderInfo.items.length ? new Set(renderInfo.items) : new Set(itemsIds);
     const { paddingTop, paddingBottom } = renderInfo;
 
     /** Set to true on manual scroll manipulations */
@@ -156,20 +173,35 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
         }
 
         let knownHeightsList = itemHeightsListRef.current;
+        let offsetBottom = knownHeightsList.length
+            ? knownHeightsList[0][1].bottom + knownHeightsList[0][1].height
+            : 0;
         const knownHeightsMap = new Map(knownHeightsList);
 
         const newlyRenderedItemsHeights: ItemSizingInfo[] = [];
+        const newlyRenderedItems: [string | number, HTMLDivElement][] = [];
         for (const [id, element] of renderedItemElementsRef.current.entries()) {
             if (knownHeightsMap.has(id)) {
                 break;
+            } else {
+                newlyRenderedItems.unshift([id, element]);
             }
-            newlyRenderedItemsHeights.push([id, element.offsetHeight]);
         };
+        const knownItemsCount = knownHeightsList.length;
+        newlyRenderedItems.forEach(([id, element], idx) => {
+            itemOffsetsIndex.current[offsetBottom >> 10] = idx + knownItemsCount;
+            newlyRenderedItemsHeights.unshift([id, {
+                height: element.offsetHeight,
+                bottom: offsetBottom
+            }]);
+            offsetBottom += element.offsetHeight;
+        });
 
         knownHeightsList = newlyRenderedItemsHeights.concat(knownHeightsList);
         itemHeightsListRef.current = knownHeightsList;
 
-        const updatedRenderInfo = getVisibleItems(knownHeightsList, offsetHeight, scrollHeight, scrollTop, renderBufferSize);
+        const updatedRenderInfo = getVisibleItems(knownHeightsList, offsetHeight, scrollHeight, scrollTop, renderBufferSize, itemOffsetsIndex.current);
+
         if (!deepEqual(updatedRenderInfo, renderInfo)) {
             setRenderInfo(updatedRenderInfo);
         }
