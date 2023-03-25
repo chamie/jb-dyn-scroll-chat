@@ -18,8 +18,6 @@ type RenderInfo = {
     paddingBottom: number,
 }
 
-let prevScrollHeight = 0;
-
 const deepEqual = memoizeOne(_deepEqual);
 
 /**
@@ -178,12 +176,6 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
     if (containerRef.current) {
         const { scrollTop, scrollHeight } = containerRef.current;
         scrollBottom = scrollHeight - scrollTop;
-        const itemsRendered = firstVisibleItemIdx - lastVisibleItemIdx + 1;
-        console.log("In Render:");
-        console.table({
-            "items total": items.length, itemsRendered,
-            lastVisibleItemIdx, firstVisibleItemIdx
-        });
     }
 
     /** Set to true on manual scroll manipulations */
@@ -208,11 +200,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
                 containerElement.scrollTop = containerElement.scrollHeight;
             } else {
                 const { scrollHeight } = containerElement;
-                prevScrollHeight = scrollHeight;
-                const listHeight = containerElement.querySelector("div:nth-child(2)")?.scrollHeight;
-                console.log("In Effect:");
                 const scrollTop = scrollHeight - scrollBottom;
-                console.table({ scrollHeight, prevScrollHeight, listHeight, scrollBottom, scrollTop });
                 containerElement.scrollTop = scrollTop;
             }
 
@@ -231,8 +219,6 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
             skipOnScroll.current = false;
             return;
         }
-
-        console.log("OnScroll triggered");
 
         const { scrollTop, scrollHeight, offsetHeight } = event.currentTarget;
 
