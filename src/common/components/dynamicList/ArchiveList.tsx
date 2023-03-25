@@ -178,9 +178,6 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
         scrollBottom = scrollHeight - scrollTop;
     }
 
-    /** Set to true on manual scroll manipulations */
-    const skipOnScroll = useRef(false);
-
     useLayoutEffect(
         /** Apply scroll position */
         () => {
@@ -215,11 +212,6 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
     wasLoadPrevCalled.current = !hasListChanged && wasLoadPrevCalled.current;
 
     const onScroll = (event: React.UIEvent<HTMLDivElement, UIEvent>) => {
-        if (skipOnScroll.current) {
-            skipOnScroll.current = false;
-            return;
-        }
-
         const { scrollTop, scrollHeight, offsetHeight } = event.currentTarget;
 
         if (scrollTop <= renderBufferSize && loadPreviousRecords && !wasLoadPrevCalled.current) {
