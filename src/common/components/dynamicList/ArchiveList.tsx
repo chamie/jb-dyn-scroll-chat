@@ -31,6 +31,7 @@ const deepEqual = memoizeOne(_deepEqual);
  * @param scrollHeight scrolling container's scrollHeight
  * @param scrollTop scrolling container's scrollTop
  * @param bufferSize size of the area that is not visible but should be rendered
+ * @param itemOffsetsIndex stores bottom-up indexes for items that start each (2^indexRangeOrder)-pixel-high range, i.e. [12,23] means range 0 starts with item #12, and range 1 starts with item #23. So each search takes not more than (rangeSize/minimumItemHeight) iterations.
  * @returns ids of the items to be rendered given these sizes and the scroll position, and padding sizes that would substitute the non-rendered items.
  */
 const getRenderBounds =
@@ -53,7 +54,7 @@ const getRenderBounds =
          *  ┌┼──┼┐ ─┐
          *  ││  ││──│───viewport
          *  ││  ││  │
-         *  └┼──┼┘  ├── this thing (+ buffer size)
+         *  └┼──┼┘  ├── this distance (+ buffer size)
          *   └──┘  ─┘
          * ```
         */
@@ -65,7 +66,7 @@ const getRenderBounds =
          *  ┌┼──┼┐
          *  ││  ││-viewport
          *  ││  ││
-         *  └┼──┼┘ ─┬── this thing (- buffer size)
+         *  └┼──┼┘ ─┬── this distance (- buffer size)
          *   └──┘  ─┘
          * ```
         */
