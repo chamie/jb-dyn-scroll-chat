@@ -83,11 +83,8 @@ const getRenderBounds =
             }
         }
         const firstVisibleItemIdx = getIndexFromOppositeEnd(firstVisibleItemIdxFromTop);
-        const topItemPosition = itemPositions[0][1];
-        const topItemTop = topItemPosition.bottom + topItemPosition.height;
-
-        const firstVisibleItemPosition = itemPositions[firstVisibleItemIdxFromTop][1];
-        const firstVisibleItemTop = firstVisibleItemPosition.height + firstVisibleItemPosition.bottom;
+        const topItemTop = itemPositions[0][1].top;
+        const firstVisibleItemTop = itemPositions[firstVisibleItemIdxFromTop][1].top;
 
         const paddingTop = topItemTop - firstVisibleItemTop;
 
@@ -99,8 +96,7 @@ const getRenderBounds =
         let lastVisibleItemIdxFromTop = itemPositions.length - 1;
 
         for (let idx = lowerBoundSearchStartIdx; idx < itemPositions.length; idx++) {
-            const { height, bottom } = itemPositions[idx][1];
-            const top = height + bottom;
+            const { top, bottom } = itemPositions[idx][1];
             if (top > lowerBound && bottom <= lowerBound) {
                 lastVisibleItemIdxFromTop = idx;
                 break
@@ -227,7 +223,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
         /** Numbering: top to bottom */
         let knownPositionsList = itemHeightsListRef.current;
         let offsetBottom = knownPositionsList.length
-            ? knownPositionsList[0][1].bottom + knownPositionsList[0][1].height
+            ? knownPositionsList[0][1].top
             : 0;
 
         const topKnownItemId = knownPositionsList[0]
@@ -247,7 +243,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
         newlyRenderedItems.forEach(([id, element], idx) => {
             itemPositionsIndex.current[offsetBottom >> 10] = idx + knownItemsCount;
             newlyRenderedItemsHeights.unshift([id, {
-                height: element.offsetHeight,
+                top: offsetBottom + element.offsetHeight,
                 bottom: offsetBottom
             }]);
             offsetBottom += element.offsetHeight;
