@@ -3,23 +3,14 @@
     "version": "0.1.0",
     "private": true,
     "dependencies": {
-        "@reduxjs/toolkit": "^1.9.3",
-        "@testing-library/jest-dom": "^5.16.5",
-        "@testing-library/react": "^14.0.0",
-        "@testing-library/user-event": "^14.4.3",
-        "@types/jest": "^29.4.0",
-        "@types/json-server": "^0.14.4",
-        "@types/node": "^18.14.1",
-        "@types/react": "^18.0.28",
-        "@types/react-dom": "^18.0.11",
         "memoize-one": "^6.0.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-redux": "^8.0.5",
-        "react-router-dom": "^6.8.1",
+        "react-router-dom": "^6.9.0",
         "react-scripts": "5.0.1",
         "typescript": "^4.9.5",
-        "web-vitals": "^3.1.1"
+        "web-vitals": "^3.3.0"
     },
     "scripts": {
         "start": "npm run build-all && node server/server.js launch-browser",
@@ -50,8 +41,18 @@
         ]
     },
     "devDependencies": {
-        "json-server": "^0.17.2",
+        "@reduxjs/toolkit": "^1.9.3",
+        "@testing-library/jest-dom": "^5.16.5",
+        "@testing-library/react": "^14.0.0",
+        "@testing-library/user-event": "^14.4.3",
+        "@types/jest": "^29.5.0",
+        "@types/json-server": "^0.14.4",
+        "@types/node": "^18.15.8",
+        "@types/react": "^18.0.29",
+        "@types/react-dom": "^18.0.11",
+        "@types/react-router-dom": "^5.3.3",
+        "json-server": "^0.17.3",
         "open": "^8.4.2",
-        "sass": "^1.58.3"
+        "sass": "^1.60.0"
     }
 }

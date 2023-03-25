@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useParams } from "react-router-dom"
+import { useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
 import { selectChatMessages, selectChatTitle, selectIsFirstPage, selectIsLastPage, selectLoadState } from "./chatsSlice"
 import { init, fetchMoreMessages, fetchNextMessages, fetchPreviousMessages, loadMessages } from "./chatThunks";
