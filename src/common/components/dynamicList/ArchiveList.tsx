@@ -4,6 +4,8 @@ import styles from './DynamicList.module.css';
 import memoizeOne from "memoize-one";
 import { ItemSizingInfo } from "./itemSizing";
 
+const indexRangeOrder = 10;
+
 export type Props<T> = {
     items: T[],
     ElementComponent: React.ComponentType<T>,
@@ -69,7 +71,7 @@ const getRenderBounds =
         */
         const lowerBound = scrollHeight - scrollTop - offsetHeight - bufferSize;
 
-        const upperBoundRangeId = upperBound >> 10;
+        const upperBoundRangeId = upperBound >> indexRangeOrder;
         const upperBoundSearchStartIdx = itemOffsetsIndex[upperBoundRangeId] === undefined
             ? 0
             : getIndexFromOppositeEnd(itemOffsetsIndex[upperBoundRangeId]);
@@ -88,7 +90,7 @@ const getRenderBounds =
 
         const paddingTop = topItemTop - firstVisibleItemTop;
 
-        const lowerBoundRangeId = lowerBound >> 10;
+        const lowerBoundRangeId = lowerBound >> indexRangeOrder;
         const lowerBoundSearchStartIdx = itemOffsetsIndex[lowerBoundRangeId] === undefined
             ? 0
             : itemPositions.length - 1 - itemOffsetsIndex[lowerBoundRangeId];
@@ -241,7 +243,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
         };
         const knownItemsCount = knownPositionsList.length;
         newlyRenderedItems.forEach(([id, element], idx) => {
-            itemPositionsIndex.current[offsetBottom >> 10] = idx + knownItemsCount;
+            itemPositionsIndex.current[offsetBottom >> indexRangeOrder] = idx + knownItemsCount;
             newlyRenderedItemsHeights.unshift([id, {
                 top: offsetBottom + element.offsetHeight,
                 bottom: offsetBottom
