@@ -12,7 +12,9 @@ export type Props<T> = {
 }
 
 type RenderInfo = {
+    /** counted from bottom, so to remain valid when new items are added on top */
     firstVisibleItemIdx: number,
+    /** counted from bottom, so to remain valid when new items are added on top */
     lastVisibleItemIdx: number,
     paddingTop: number,
     paddingBottom: number,
@@ -44,23 +46,25 @@ const getRenderBounds =
 
         /** Distance from the top of container's visible part to its content bottom
          * ```
+         *     ┌── content
          *   ┌──┐
-         *  ┌┼──┼┐  ─┐
-         *  ││  ││   │
-         *  ││  ││   │
-         *  └┼──┼┘   ├── this thing (+ buffer size)
-         *   └──┘   ─┘
+         *  ┌┼──┼┐ ─┐
+         *  ││  ││──│───viewport
+         *  ││  ││  │
+         *  └┼──┼┘  ├── this thing (+ buffer size)
+         *   └──┘  ─┘
          * ```
         */
         const upperBound = scrollHeight - scrollTop + bufferSize;
         /** Distance from the bottom of container's visible part to its content bottom:
          * ```
+         *     ┌── content
          *   ┌──┐
          *  ┌┼──┼┐
+         *  ││  ││-viewport
          *  ││  ││
-         *  ││  ││
-         *  └┼──┼┘  ─┬── this thing (- buffer size)
-         *   └──┘   ─┘
+         *  └┼──┼┘ ─┬── this thing (- buffer size)
+         *   └──┘  ─┘
          * ```
         */
         const lowerBound = scrollHeight - scrollTop - offsetHeight - bufferSize;
@@ -129,6 +133,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
     let { lastVisibleItemIdx } = renderInfo;
     lastVisibleItemIdx = lastVisibleItemIdx === -1 ? items.length - 1 : lastVisibleItemIdx;
 
+    // If new items added — force-render them to know the heights and positions
     const firstVisibleItemIdx = hasListChanged
         ? items.length - 1
         : renderInfo.firstVisibleItemIdx;
