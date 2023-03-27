@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { deepEqual as _deepEqual } from "../../tools";
 import styles from './DynamicList.module.css';
 import memoizeOne from "memoize-one";
@@ -13,7 +13,7 @@ export type Props<T> = {
     renderBufferSize?: number,
 }
 
-type RenderInfo = {
+type RenderBounds = {
     /** counted from bottom, so to remain valid when new items are added on top */
     firstVisibleItemIdx: number,
     /** counted from bottom, so to remain valid when new items are added on top */
@@ -27,7 +27,7 @@ const deepEqual = memoizeOne(_deepEqual);
 /**
  * Calculates which items should be rendered in the scroll container given the sizes and scroll position
  * @param itemPositions size and id for each known item, ordered from top to bottom
- * @param offsetHeight scrolling container's height
+ * @param clientHeight scrolling container's height
  * @param scrollHeight scrolling container's scrollHeight
  * @param scrollTop scrolling container's scrollTop
  * @param bufferSize size of the area that is not visible but should be rendered
@@ -35,7 +35,7 @@ const deepEqual = memoizeOne(_deepEqual);
  * @returns ids of the items to be rendered given these sizes and the scroll position, and padding sizes that would substitute the non-rendered items.
  */
 const getRenderBounds =
-    (itemPositions: readonly ItemSizingInfo[], offsetHeight: number, scrollHeight: number, scrollTop: number, bufferSize: number, itemOffsetsIndex: number[]): RenderInfo => {
+    (itemPositions: readonly ItemSizingInfo[], clientHeight: number, scrollHeight: number, scrollTop: number, bufferSize: number, itemOffsetsIndex: number[]): RenderBounds => {
         if (!itemPositions.length) {
             return {
                 firstVisibleItemIdx: 0,
@@ -70,7 +70,7 @@ const getRenderBounds =
          *   └──┘  ─┘
          * ```
         */
-        const lowerBound = scrollHeight - scrollTop - offsetHeight - bufferSize;
+        const lowerBound = scrollHeight - scrollTop - clientHeight - bufferSize;
 
         const upperBoundRangeId = upperBound >> indexRangeOrder;
         const upperBoundSearchStartIdx = itemOffsetsIndex[upperBoundRangeId] === undefined
@@ -112,10 +112,11 @@ const getRenderBounds =
     };
 
 const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T>) => {
-    const { items, ElementComponent, loadPreviousRecords, renderBufferSize = 3000 } = props;
+    const { items, ElementComponent, loadPreviousRecords, renderBufferSize = 1000 } = props;
 
     const previousItems = useRef<T[]>([]);
     const hasListChanged = previousItems.current !== items;
+    const wasListScrollable = useRef(false);
 
     /** Stores rendered elements of the items added to DOM during the prev render */
     const renderedItemElementsRef = useRef(new Map<string | number, HTMLDivElement>());
@@ -127,30 +128,33 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
 
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const [renderInfo, setRenderInfo] = useState<RenderInfo>({ firstVisibleItemIdx: 0, lastVisibleItemIdx: 0, paddingBottom: 0, paddingTop: 0 });
+    const [renderBounds, setRenderBounds] = useState<RenderBounds>({
+        firstVisibleItemIdx: -1,
+        lastVisibleItemIdx: 0,
+        paddingBottom: 0,
+        paddingTop: 0,
+    });
 
-    let { lastVisibleItemIdx } = renderInfo;
-    lastVisibleItemIdx = lastVisibleItemIdx === -1 ? items.length - 1 : lastVisibleItemIdx;
-
-    // If new items added — force-render them to know the heights and positions
-    const firstVisibleItemIdx = hasListChanged
-        ? items.length - 1
-        : renderInfo.firstVisibleItemIdx;
-    const paddingTop = hasListChanged
-        ? 0
-        : renderInfo.paddingTop;
-
-    const saveListItemElementRef = useCallback((itemId: string | number) => (element: HTMLDivElement) => {
+    const saveListItemElementRef = (itemId: string | number) => (element: HTMLDivElement) => {
         if (!element) {
             return;
         }
         renderedItemElementsRef.current.set(itemId, element);
-    }, []);
+    };
 
     const listItems = [] as JSX.Element[];
 
-    const lastVisibleItemIdxFromTop = items.length - lastVisibleItemIdx - 1;
-    const firstVisibleItemIdxFromTop = items.length - firstVisibleItemIdx - 1;
+    // If list changed (new items added) — force-render them to know the heights and positions
+    const firstVisibleItemIdxFromTop = hasListChanged || renderBounds.firstVisibleItemIdx === -1
+        ? 0
+        : items.length - renderBounds.firstVisibleItemIdx - 1;
+
+    const paddingTop = hasListChanged
+        ? 0
+        : renderBounds.paddingTop;
+
+    // If never initialized — show the list to the end
+    const lastVisibleItemIdxFromTop = items.length - renderBounds.lastVisibleItemIdx - 1;
 
     if (items.length) {
         for (let idx = firstVisibleItemIdxFromTop; idx <= lastVisibleItemIdxFromTop; idx++) {
@@ -159,7 +163,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
             listItems.push(
                 <div
                     className={styles.item}
-                    data-divider={!(idx % 20) ? ">============================================<" : undefined}
+                    data-strobe={!(idx % 10) ? ">============================================<" : undefined}
                     data-testid="item"
                     ref={saveListItemElementRef(item.id)}
                     key={item.id}>
@@ -171,7 +175,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
 
     renderedItemElementsRef.current.clear();
 
-    const { paddingBottom } = renderInfo;
+    const { paddingBottom } = renderBounds;
 
     /**
      * How far is is the container scrolled from bottom;
@@ -182,6 +186,50 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
         scrollBottom = scrollHeight - scrollTop;
     }
 
+    let shouldSkipOnScroll = false;
+
+    const detectNewItems = () => {
+        /** Numbering: top to bottom */
+        let knownPositionsList = itemHeightsListRef.current;
+
+        const topKnownItemId = knownPositionsList[0]
+            ? knownPositionsList[0][0]
+            : Infinity;
+
+        const topKnownItemTop = knownPositionsList[0]
+            ? knownPositionsList[0][1].top
+            : 0;
+
+        const newlyRenderedItemsHeights: ItemSizingInfo[] = [];
+        const newlyRenderedItems: [string | number, HTMLDivElement][] = [];
+        let knownItemsCount = knownPositionsList.length;
+        for (const [id, element] of renderedItemElementsRef.current.entries()) {
+            const parentOffsetHeight = (element.offsetParent as HTMLElement).scrollHeight;
+            const offsetFromBottom = parentOffsetHeight - element.offsetTop;
+            if (offsetFromBottom <= topKnownItemTop || id === topKnownItemId) {
+                break;
+            } else {
+                // Unshift so we can iterate bottom-up later
+                newlyRenderedItems.unshift([id, element]);
+            }
+        };
+
+        knownItemsCount = knownPositionsList.length;
+        newlyRenderedItems.forEach(([id, element], idx) => {
+            const parentOffsetHeight = (element.offsetParent as HTMLElement).scrollHeight;
+            const offsetFromBottom = parentOffsetHeight - element.offsetTop;
+            itemPositionsIndex.current[offsetFromBottom >> indexRangeOrder] = idx + knownItemsCount;
+            // Unshift again so the resulting array is reversed back to top-down order, in line with the rendering order
+            newlyRenderedItemsHeights.unshift([id, {
+                top: offsetFromBottom,
+                bottom: offsetFromBottom - element.offsetHeight,
+            }]);
+        });
+
+        knownPositionsList = newlyRenderedItemsHeights.concat(knownPositionsList);
+        itemHeightsListRef.current = knownPositionsList;
+    };
+
     useLayoutEffect(
         /** Apply scroll position */
         () => {
@@ -189,15 +237,19 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
             if (!hasListChanged) {
                 return;
             }
-
             const containerElement = containerRef.current;
             if (!containerElement) { // should never happen, tbh.
                 console.error("OH RLY?!!");
                 return;
             }
 
+            const isListScrollable = containerElement.scrollHeight > containerElement.clientHeight;
+
+            // We gonna adjust scrolling here, so
+            shouldSkipOnScroll = true;
+
             // If list is populated for the first time, scroll to bottom
-            if (!previousItems.current.length && items.length) {
+            if (!wasListScrollable.current && isListScrollable) {
                 containerElement.scrollTop = containerElement.scrollHeight;
             } else {
                 const { scrollHeight } = containerElement;
@@ -205,60 +257,42 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
                 containerElement.scrollTop = scrollTop;
             }
 
+            wasListScrollable.current = isListScrollable;
+
             previousItems.current = items;
 
+            detectNewItems();
             //});
-        }, [items, hasListChanged, scrollBottom]);
+        });
 
     const wasLoadPrevCalled = useRef(false);
 
     // reset to false on list change
     wasLoadPrevCalled.current = !hasListChanged && wasLoadPrevCalled.current;
 
-    const onScroll = (event: React.UIEvent<HTMLDivElement, UIEvent>) => {
-        const { scrollTop, scrollHeight, offsetHeight } = event.currentTarget;
+    const onScroll = () => {
+        if (shouldSkipOnScroll) {
+            shouldSkipOnScroll = false;
+            return;
+        }
 
+        if (!containerRef.current) {
+            return;
+        }
+
+        const { scrollTop, scrollHeight, offsetHeight } = containerRef.current;
+
+        // Detect edge and load more records:
         if (scrollTop <= renderBufferSize && loadPreviousRecords && !wasLoadPrevCalled.current) {
             wasLoadPrevCalled.current = true;
             loadPreviousRecords();
         }
 
-        /** Numbering: top to bottom */
-        let knownPositionsList = itemHeightsListRef.current;
-        let offsetBottom = knownPositionsList.length
-            ? knownPositionsList[0][1].top
-            : 0;
+        // Update render bounds:
+        const updatedRenderBounds = getRenderBounds(itemHeightsListRef.current, offsetHeight, scrollHeight, scrollTop, renderBufferSize, itemPositionsIndex.current);
 
-        const topKnownItemId = knownPositionsList[0]
-            ? knownPositionsList[0][0]
-            : Infinity;
-
-        const newlyRenderedItemsHeights: ItemSizingInfo[] = [];
-        const newlyRenderedItems: [string | number, HTMLDivElement][] = [];
-        for (const [id, element] of renderedItemElementsRef.current.entries()) {
-            if (id >= topKnownItemId) { // TODO: check if this could be done without relying on the IDs being sorted
-                break;
-            } else {
-                newlyRenderedItems.unshift([id, element]);
-            }
-        };
-        const knownItemsCount = knownPositionsList.length;
-        newlyRenderedItems.forEach(([id, element], idx) => {
-            itemPositionsIndex.current[offsetBottom >> indexRangeOrder] = idx + knownItemsCount;
-            newlyRenderedItemsHeights.unshift([id, {
-                top: offsetBottom + element.offsetHeight,
-                bottom: offsetBottom
-            }]);
-            offsetBottom += element.offsetHeight;
-        });
-
-        knownPositionsList = newlyRenderedItemsHeights.concat(knownPositionsList);
-        itemHeightsListRef.current = knownPositionsList;
-
-        const updatedRenderInfo = getRenderBounds(knownPositionsList, offsetHeight, scrollHeight, scrollTop, renderBufferSize, itemPositionsIndex.current);
-
-        if (!deepEqual(updatedRenderInfo, renderInfo)) {
-            setRenderInfo(updatedRenderInfo);
+        if (!deepEqual(updatedRenderBounds, renderBounds)) {
+            setRenderBounds(updatedRenderBounds);
         }
     }
 
