@@ -1,4 +1,7 @@
-# Getting Started with Create React App
+# ArchiveList
+This dynamic list component renders only the items visible in viewport + 1000 pixels over that (+ the newly loaded items on each batch load from server).
+# Time complexity
+**Time complexity of all rendering and computations in regards of the full list is O(1)**, time only depends on the number of items fitting into the rendering area (vieport + buffer).
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app), using the [Redux](https://redux.js.org/) and [Redux Toolkit](https://redux-toolkit.js.org/) TS template.
 
