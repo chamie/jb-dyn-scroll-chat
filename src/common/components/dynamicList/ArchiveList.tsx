@@ -35,7 +35,7 @@ const deepEqual = memoizeOne(_deepEqual);
  * @returns ids of the items to be rendered given these sizes and the scroll position, and padding sizes that would substitute the non-rendered items.
  */
 const getRenderBounds =
-    (itemPositions: readonly ItemSizingInfo[], clientHeight: number, scrollHeight: number, scrollTop: number, bufferSize: number, itemOffsetsIndex: number[]): RenderBounds => {
+    (itemPositions: readonly ItemSizingInfo[], container: HTMLElement, bufferSize: number, itemOffsetsIndex: number[]): RenderBounds => {
         if (!itemPositions.length) {
             return {
                 firstVisibleItemIdx: 0,
@@ -44,6 +44,8 @@ const getRenderBounds =
                 paddingTop: 0,
             };
         }
+
+        const {clientHeight, scrollHeight, scrollTop} = container;
 
         const getIndexFromOppositeEnd = (index: number) => itemPositions.length - index - 1;
 
@@ -280,16 +282,14 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
             return;
         }
 
-        const { scrollTop, scrollHeight, offsetHeight } = containerRef.current;
-
         // Detect edge and load more records:
-        if (scrollTop <= renderBufferSize && loadPreviousRecords && !wasLoadPrevCalled.current) {
+        if (containerRef.current.scrollTop <= renderBufferSize && loadPreviousRecords && !wasLoadPrevCalled.current) {
             wasLoadPrevCalled.current = true;
             loadPreviousRecords();
         }
 
         // Update render bounds:
-        const updatedRenderBounds = getRenderBounds(itemHeightsListRef.current, offsetHeight, scrollHeight, scrollTop, renderBufferSize, itemPositionsIndex.current);
+        const updatedRenderBounds = getRenderBounds(itemHeightsListRef.current, containerRef.current, renderBufferSize, itemPositionsIndex.current);
 
         if (!deepEqual(updatedRenderBounds, renderBounds)) {
             setRenderBounds(updatedRenderBounds);
