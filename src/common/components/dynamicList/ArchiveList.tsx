@@ -14,7 +14,9 @@ export type Props<T> = {
 }
 
 type RenderBounds = {
-    /** counted from bottom, so to remain valid when new items are added on top */
+    /** counted from bottom, so to remain valid when new items are added on top.
+     * -1 for "not set yet, pick the top one"
+     */
     firstVisibleItemIdx: number,
     /** counted from bottom, so to remain valid when new items are added on top */
     lastVisibleItemIdx: number,
@@ -124,6 +126,8 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
     /** Stores the heights of all known items, populated on their first render, ordered top to bottom */
     const itemHeightsListRef = useRef([] as ItemSizingInfo[]);
 
+    /** Stores the index (in the itemHeightsListRef array) of top item
+     * for each (2^indexRangeOrder)-pixel-high rendering range */
     const itemPositionsIndex = useRef([] as number[]);
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -177,9 +181,7 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
 
     const { paddingBottom } = renderBounds;
 
-    /**
-     * How far is is the container scrolled from bottom;
-     */
+    /** How far is is the container scrolled from bottom */
     let scrollBottom = 0;
     if (containerRef.current) {
         const { scrollTop, scrollHeight } = containerRef.current;
