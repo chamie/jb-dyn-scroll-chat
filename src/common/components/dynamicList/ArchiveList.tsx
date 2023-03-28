@@ -14,10 +14,8 @@ export type Props<T> = {
 }
 
 type RenderBounds = {
-    /** counted from bottom, so to remain valid when new items are added on top.
-     * -1 for "not set yet, pick the top one"
-     */
-    firstVisibleItemIdx: number,
+    /** counted from bottom, so to remain valid when new items are added on top */
+    firstVisibleItemIdx?: number,
     /** counted from bottom, so to remain valid when new items are added on top */
     lastVisibleItemIdx: number,
     paddingTop: number,
@@ -126,14 +124,13 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
     /** Stores the heights of all known items, populated on their first render, ordered top to bottom */
     const itemHeightsListRef = useRef([] as ItemSizingInfo[]);
 
-    /** Stores the index (in the itemHeightsListRef array) of top item
+    /** Stores the index (in the itemHeightsListRef array) of the top item
      * for each (2^indexRangeOrder)-pixel-high rendering range */
     const itemPositionsIndex = useRef([] as number[]);
 
     const containerRef = useRef<HTMLDivElement>(null);
 
     const [renderBounds, setRenderBounds] = useState<RenderBounds>({
-        firstVisibleItemIdx: -1,
         lastVisibleItemIdx: 0,
         paddingBottom: 0,
         paddingTop: 0,
@@ -148,8 +145,8 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
 
     const listItems = [] as JSX.Element[];
 
-    // If list changed (new items added) — force-render them to know the heights and positions
-    const firstVisibleItemIdxFromTop = hasListChanged || renderBounds.firstVisibleItemIdx === -1
+    // If list was changed (new items added) — force-render them to know the heights and positions
+    const firstVisibleItemIdxFromTop = hasListChanged || renderBounds.firstVisibleItemIdx === undefined
         ? 0
         : items.length - renderBounds.firstVisibleItemIdx - 1;
 
@@ -233,7 +230,6 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
     };
 
     useLayoutEffect(
-        /** Apply scroll position */
         () => {
             //window.requestAnimationFrame(() => {
             if (!hasListChanged) {
@@ -247,7 +243,9 @@ const ArchiveListComponent = <T extends { id: string | number },>(props: Props<T
 
             const isListScrollable = containerElement.scrollHeight > containerElement.clientHeight;
 
-            // We gonna adjust scrolling here, so
+            // We gonna adjust scrolling here, so disable scroll handling once.
+            // Yes, we are fine with it being reset on next render, whenever it happens.
+            // eslint-disable-next-line react-hooks/exhaustive-deps
             shouldSkipOnScroll = true;
 
             // If list is populated for the first time, scroll to bottom
